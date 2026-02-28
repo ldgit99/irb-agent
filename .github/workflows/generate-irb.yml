@@ -63,6 +63,10 @@ on:
         description: "자료 수집 도구 (예: 설문지, 관찰일지)"
         required: false
         default: ""
+      additional_notes:
+        description: "기타 사항 (추가 요청)"
+        required: false
+        default: ""
       pi_name:
         description: "연구책임자 성명"
         required: false
@@ -125,6 +129,7 @@ jobs:
             --sensitive-data "${{ github.event.inputs.sensitive_data }}" \
             --face-to-face "${{ github.event.inputs.face_to_face }}" \
             --data-tools   "${{ github.event.inputs.data_tools }}" \
+            --additional-notes "${{ github.event.inputs.additional_notes }}" \
             --pi-name      "${{ github.event.inputs.pi_name }}" \
             --pi-phone     "${{ github.event.inputs.pi_phone }}" \
             --model        "${{ github.event.inputs.model }}" \

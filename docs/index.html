@@ -249,6 +249,10 @@
           <textarea id="method" placeholder="예: 사전-사후 검사, 설문, 인터뷰를 포함한 혼합연구"></textarea>
           <div class="char-count" id="method_count">0자</div>
         </div>
+        <div class="field">
+          <label>기타 사항 (추가 요청)</label>
+          <textarea id="additional_notes" placeholder="예: 특정 용어/문체, 반드시 포함할 문구, 제외할 표현 등"></textarea>
+        </div>
         <div class="row">
           <div class="field"><label>연구 시작일</label><input id="study_start" type="date" /></div>
           <div class="field"><label>연구 종료일</label><input id="study_end" type="date" /></div>
@@ -430,6 +434,7 @@
         sensitive_data:  document.getElementById("sensitive_data").value.trim(),
         face_to_face:    document.getElementById("face_to_face").value.trim(),
         data_tools:      document.getElementById("data_tools").value.trim(),
+        additional_notes: document.getElementById("additional_notes").value.trim(),
         pi_name:         document.getElementById("pi_name").value.trim(),
         pi_phone:        document.getElementById("pi_phone").value.trim(),
         model:           document.getElementById("model").value.trim() || "gpt-4.1-mini",
@@ -746,13 +751,14 @@
       document.getElementById("consent_method").value = "서면 동의";
       document.getElementById("data_tools").value = "설문지";
       document.getElementById("risk_level").value = "최소위험";
+      document.getElementById("additional_notes").value = "";
       updateCharCount("topic", "topic_count");
       updateCharCount("method", "method_count");
       setStatus("ok", "예시값을 적용했습니다.");
     }
 
     function clearForm() {
-      ["topic", "method", "study_start", "study_end", "target_type", "data_tools"].forEach(id => {
+      ["topic", "method", "additional_notes", "study_start", "study_end", "target_type", "data_tools"].forEach(id => {
         document.getElementById(id).value = "";
       });
       document.getElementById("sample_size").value = "50";

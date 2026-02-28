@@ -151,6 +151,28 @@ def validate_section_constraints(sections: dict) -> list[str]:
     return issues
 
 
+def generate_english_title_with_llm(api_key: str, model: str, topic_ko: str) -> str:
+    prompt = {
+        "korean_title": topic_ko,
+        "task": "Translate the Korean research title into a concise academic English title.",
+        "requirements": [
+            "Return plain text only.",
+            "Use formal academic terminology.",
+            "Do not add quotation marks or numbering.",
+            "Do not include explanations.",
+        ],
+    }
+    text = call_responses_api(
+        api_key=api_key,
+        model=model,
+        user_payload=prompt,
+        system_prompt="You are an academic translator for research titles.",
+    ).strip()
+    text = re.sub(r"^[\"'`]+|[\"'`]+$", "", text).strip()
+    text = re.sub(r"\s+", " ", text)
+    return text
+
+
 def generate_sections_with_llm(
     *,
     topic: str,
@@ -277,10 +299,22 @@ def build_irb_draft(
     sample_size: int,
     duration_months: int,
     model: str,
+    topic_en: str = "",
     extra_context: dict | None = None,
     pi_info: dict | None = None,
 ) -> dict:
     today = date.today().isoformat()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY 환경변수가 필요합니다.")
+
+    topic_en_final = (topic_en or "").strip()
+    if not topic_en_final:
+        try:
+            topic_en_final = generate_english_title_with_llm(api_key=api_key, model=model, topic_ko=topic)
+        except Exception:
+            topic_en_final = topic
+
     sections = generate_sections_with_llm(
         topic=topic,
         method=method,
@@ -297,6 +331,7 @@ def build_irb_draft(
         "meta": {
             "created_at": today,
             "topic": topic,
+            "topic_en": topic_en_final,
             "method": method,
             "institution": institution,
             "department": department,
@@ -386,13 +421,76 @@ def _set_tc_text(tc: ET.Element, text: str, ns_uri: str, char_pr_id: str = "12")
     t.text = text
 
 
-def fill_template_tables(section_xml: str, draft: dict) -> str:
+def extract_analysis_method_text(section3_text: str) -> str:
+    text = (section3_text or "").strip()
+    if not text:
+        return "자료 분석은 기술통계와 적절한 추론통계를 사용하여 수행한다."
+
+    # Prefer the "5. 자료분석 방법" block when present.
+    m = re.search(
+        r"(5\.\s*자료분석\s*방법[\s\S]*?)(?=\n\s*[1-5]\.\s*|$)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if m:
+        picked = re.sub(r"\s+", " ", m.group(1)).strip()
+    else:
+        # Fallback: collect sentences that mention analysis/statistics keywords.
+        sentences = re.split(r"(?<=[.!?])\s+|\n+", text)
+        keep = []
+        for s in sentences:
+            s2 = s.strip()
+            if not s2:
+                continue
+            if any(k in s2 for k in ["분석", "통계", "검정", "회귀", "ANOVA", "t-검정", "상관"]):
+                keep.append(s2)
+        picked = " ".join(keep[:4]).strip()
+
+    if not picked:
+        return "자료 분석은 기술통계와 적절한 추론통계를 사용하여 수행한다."
+    return picked
+
+
+def extract_red_charpr_ids_from_header_xml(header_xml: str) -> set[str]:
+    red_ids: set[str] = set()
+    for m in re.finditer(r'<hh:charPr id="(?P<id>\d+)"[^>]*textColor="(?P<color>[^"]+)"', header_xml):
+        cid = m.group("id")
+        color = m.group("color").strip().lower()
+        if color in {"#ff0000", "#bd3d3d"}:
+            red_ids.add(cid)
+    return red_ids
+
+
+def remove_red_runs_from_root(root: ET.Element, ns: dict, red_char_pr_ids: set[str]) -> None:
+    if not red_char_pr_ids:
+        return
+    for p in root.findall(".//hp:p", ns):
+        runs = p.findall("./hp:run", ns)
+        for run in runs:
+            char_pr = str(run.get("charPrIDRef", "")).strip()
+            if char_pr in red_char_pr_ids:
+                p.remove(run)
+        # Keep paragraph structure but clear empty paragraphs to avoid leftover blank guide lines.
+        if not p.findall("./hp:run", ns):
+            parent = next((node for node in root.iter() if p in list(node)), None)
+            if parent is not None:
+                parent.remove(p)
+
+
+def fill_template_tables(section_xml: str, draft: dict, red_char_pr_ids: set[str] | None = None) -> str:
     ns_uri = "http://www.hancom.co.kr/hwpml/2011/paragraph"
     ns = {"hp": ns_uri}
     root = ET.fromstring(section_xml)
+    remove_red_runs_from_root(root, ns, red_char_pr_ids or set())
     sections = draft["sections"]
     meta = draft.get("meta", {})
     study_period_text = str(meta.get("study_period_text", "")).strip() or "해당없음"
+    analysis_only_text = extract_analysis_method_text(sections.get("3. 연구 설계 및 방법", ""))
+    safety_stop_notice = (
+        "연구대상자가 어떠한 이유(설문지 작성으로 인한 일상적인 수준의 피로감 및 불편함 등)가 되었든 "
+        "연구 참여를 중단하고 싶을 경우, 아무런 불이익 없이 언제든 연구 참여를 중단 할 수 있음을 충분히 안내한다."
+    )
+    attachment_notice = "별도파일 첨부하였음"
 
     row_map = {
         "연구목적": sections.get("2. 연구 배경 및 목적", "") or "해당없음",
@@ -406,10 +504,11 @@ def fill_template_tables(section_xml: str, draft: dict) -> str:
         "연구대상자 제외기준": sections.get("4. 연구대상자 선정 및 제외 기준", "") or "해당없음",
         "연구대상자 및 인체유래물의 수(량)": sections.get("3. 연구 설계 및 방법", "") or "해당없음",
         "연구대상자 및 인체유래물의 수(량) 산출근거 및 통계방법 (실험결과에 기초한 N수 계산)": sections.get("3. 연구 설계 및 방법", "") or "해당없음",
-        "자료분석 및 통계적 방법": sections.get("3. 연구 설계 및 방법", "") or "해당없음",
+        "자료분석 및 통계적 방법": analysis_only_text,
         "예측 효능효과": "종속 변인이 사전 대비 사후 측정에서 통계적으로 유의하게 상승할 것으로 예측된다.",
         "예측 부작용 및 주의사항": sections.get("6. 예측 가능한 위험 및 불편과 최소화 대책", "") or "해당없음",
-        "연구대상자 안전보호에 관한 대책 (시험중지, 부작용에 대한 대처 사항 등)": sections.get("6. 예측 가능한 위험 및 불편과 최소화 대책", "") or "해당없음",
+        "연구대상자 안전보호에 관한 대책 (시험중지, 부작용에 대한 대처 사항 등)": safety_stop_notice,
+        "연구대상자 설명서, 인간대상 연구 동의서, 인체유래물 연구 동의서, 동의서 면제 자가 점검표 및 사유서": attachment_notice,
         "연구대상자 개인정보 및 연구 관련 자료 보호(관리, 보관 및 폐기 등)에 관한 대책": sections.get("7. 개인정보 및 연구자료 보호 계획", "") or "해당없음",
         "인체유래물의 관리, 보관 및 폐기에 관한 계획": "해당없음",
         "연구대상자 보 상 및 배상에 관한 계획": sections.get("9. 보상 및 배상 계획", "") or "해당없음",
@@ -421,6 +520,14 @@ def fill_template_tables(section_xml: str, draft: dict) -> str:
         if len(tcs) < 2:
             continue
         label = _tc_text(tcs[0], ns)
+        if (
+            "설명서" in label
+            and "동의서" in label
+            and "면제" in label
+            and "사유서" in label
+        ):
+            _set_tc_text(tcs[1], attachment_notice, ns_uri, char_pr_id="12")
+            continue
         if label in row_map:
             _set_tc_text(tcs[1], row_map[label] or "해당없음", ns_uri, char_pr_id="12")
 
@@ -433,7 +540,7 @@ def fill_template_tables(section_xml: str, draft: dict) -> str:
                 tcs = rows[0].findall("./hp:tc", ns)
                 if len(tcs) >= 4:
                     pi_name = str(meta.get("pi_name", "")).strip() or "해당없음"
-                    pi_aff = str(meta.get("pi_affiliation", "")).strip() or str(meta.get("department", "")).strip() or "해당없음"
+                    pi_aff = "사범대학 정보컴퓨터교육과"
                     _set_tc_text(tcs[1], pi_name, ns_uri, char_pr_id="12")
                     _set_tc_text(tcs[3], pi_aff, ns_uri, char_pr_id="12")
             continue
@@ -449,7 +556,8 @@ def fill_template_tables(section_xml: str, draft: dict) -> str:
             if "연구 과제명" in first and "국문" in second and len(tcs) >= 3:
                 _set_tc_text(tcs[2], sections.get("1. 연구 과제명(국문)", ""), ns_uri, char_pr_id="12")
             elif first == "영문" and len(tcs) >= 2:
-                _set_tc_text(tcs[1], "Not provided", ns_uri, char_pr_id="12")
+                topic_en = str(meta.get("topic_en", "")).strip() or "Not provided"
+                _set_tc_text(tcs[1], topic_en, ns_uri, char_pr_id="12")
             elif "연구 실시기관" in first and "실시기관명" in second and len(tcs) >= 3:
                 inst = sections.get("10. 연구 수행 기관 및 소속", "")
                 _set_tc_text(tcs[2], inst, ns_uri, char_pr_id="12")
@@ -509,7 +617,11 @@ def fill_template_tables(section_xml: str, draft: dict) -> str:
 def write_hwpx_from_template(template_path: Path, output_path: Path, draft: dict) -> None:
     lines = build_hwpx_lines(draft)
     preview_text = "\n".join(lines).rstrip() + "\n"
+    red_char_pr_ids: set[str] = set()
     with zipfile.ZipFile(template_path, "r") as zin:
+        if "Contents/header.xml" in zin.namelist():
+            header_xml = zin.read("Contents/header.xml").decode("utf-8")
+            red_char_pr_ids = extract_red_charpr_ids_from_header_xml(header_xml)
         with zipfile.ZipFile(output_path, "w") as zout:
             for item in zin.infolist():
                 data = zin.read(item.filename)
@@ -517,7 +629,7 @@ def write_hwpx_from_template(template_path: Path, output_path: Path, draft: dict
                     data = preview_text.encode("utf-8")
                 elif item.filename == "Contents/section0.xml":
                     section_xml = data.decode("utf-8")
-                    section_xml = fill_template_tables(section_xml, draft)
+                    section_xml = fill_template_tables(section_xml, draft, red_char_pr_ids=red_char_pr_ids)
                     data = section_xml.encode("utf-8")
                 zout.writestr(item, data)
 
@@ -543,6 +655,7 @@ def ask_if_missing(args: argparse.Namespace) -> argparse.Namespace:
 def main() -> None:
     parser = argparse.ArgumentParser(description="간단 입력으로 IRB 연구계획서 초안을 생성합니다.")
     parser.add_argument("--topic", type=str, help="연구 주제")
+    parser.add_argument("--topic-en", type=str, default="", help="연구 과제명(영문). 비우면 API 자동 번역")
     parser.add_argument("--method", type=str, help="연구 방법")
     parser.add_argument("--institution", type=str, default="", help="수행기관")
     parser.add_argument("--department", type=str, default="", help="소속")
@@ -607,6 +720,7 @@ def main() -> None:
 
     draft = build_irb_draft(
         topic=args.topic,
+        topic_en=args.topic_en,
         method=args.method,
         institution=args.institution,
         department=args.department,

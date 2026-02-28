@@ -362,6 +362,10 @@
           <div class="char-count" id="topic_count">0자</div>
         </div>
         <div class="field">
+          <label>연구 과제명(영문)</label>
+          <input id="research_topic_en" placeholder="비우면 API가 국문 제목을 학술적 영문으로 자동 번역" />
+        </div>
+        <div class="field">
           <label>연구 방법 <span class="required-mark">*</span></label>
           <textarea id="research_method" required placeholder="예: 사전-사후 검사, 설문, 인터뷰를 포함한 혼합연구"></textarea>
           <div class="char-count" id="method_count">0자</div>
@@ -467,7 +471,7 @@
   </div>
 
   <script>
-    const fields = ["research_topic","research_method","study_start","study_end","target_type","target_count","study_design","consent_method","data_tools","risk_level","sensitive_data","face_to_face","institution","department","pi_name","pi_phone"];
+    const fields = ["research_topic","research_topic_en","research_method","study_start","study_end","target_type","target_count","study_design","consent_method","data_tools","risk_level","sensitive_data","face_to_face","institution","department","pi_name","pi_phone"];
     const requiredIds = ["research_topic","research_method","study_start","study_end","target_type","target_count"];
     const defaultStages = [
       ["save-input","입력 저장"],
@@ -721,6 +725,7 @@
     function fillExample() {
       setForm({
         research_topic:  "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향",
+        research_topic_en: "",
         research_method: "10차시 수업, 문제해결력 사전-사후 검사",
         study_start:     "2026-01-01",
         study_end:       "2026-06-30",

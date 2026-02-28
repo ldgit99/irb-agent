@@ -35,6 +35,7 @@ RUN_STEP_DEFS = [
 
 FIELDS = {
     "연구 주제": "research_topic",
+    "연구 과제명(영문)": "research_topic_en",
     "연구 방법": "research_method",
     "연구 시작일": "study_start",
     "연구 종료일": "study_end",
@@ -84,6 +85,7 @@ def render_input_markdown(v: dict[str, str]) -> str:
 ## 필수 입력
 
 * 연구 주제: {v.get("research_topic","")}
+* 연구 과제명(영문): {v.get("research_topic_en","")}
 * 연구 방법: {v.get("research_method","")}
 * 연구 시작일: {v.get("study_start","")}
 * 연구 종료일: {v.get("study_end","")}
@@ -282,6 +284,7 @@ def run_api_pipeline(
     if progress:
         progress("prepare", "run", "입력 파라미터를 계산하고 있습니다.")
     topic = values.get("research_topic", "").strip()
+    topic_en = values.get("research_topic_en", "").strip()
     method = values.get("research_method", "").strip()
     institution = values.get("institution", "").strip() or "미정"
     department = values.get("department", "").strip() or "미정"
@@ -298,6 +301,8 @@ def run_api_pipeline(
         topic,
         "--method",
         method,
+        "--topic-en",
+        topic_en,
         "--institution",
         institution,
         "--department",

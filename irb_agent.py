@@ -480,7 +480,8 @@ def fill_template_tables(section_xml: str, draft: dict, red_char_pr_ids: set[str
     ns_uri = "http://www.hancom.co.kr/hwpml/2011/paragraph"
     ns = {"hp": ns_uri}
     root = ET.fromstring(section_xml)
-    remove_red_runs_from_root(root, ns, red_char_pr_ids or set())
+    # Keep template guide text/styles untouched for maximum HWPX compatibility.
+    # (User requested not to remove red guide text.)
     sections = draft["sections"]
     meta = draft.get("meta", {})
     study_period_text = str(meta.get("study_period_text", "")).strip() or "해당없음"

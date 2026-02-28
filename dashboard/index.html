@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IRB 입력 대시보드</title>
+  <style>
+    :root {
+      --bg-1: #f4f8ff;
+      --bg-2: #e8f0ff;
+      --ink: #10233f;
+      --muted: #4f6687;
+      --line: rgba(16, 35, 63, 0.14);
+      --card: rgba(255, 255, 255, 0.9);
+      --accent: #0b63f6;
+      --good: #158a52;
+      --warn: #c67700;
+      --bad: #c93440;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at -5% -10%, #ffffff 0%, transparent 45%),
+        radial-gradient(circle at 105% 0%, #d7e6ff 0%, transparent 40%),
+        linear-gradient(150deg, var(--bg-1), var(--bg-2));
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0; font-size: 30px; letter-spacing: -0.02em; }
+    .sub { margin-top: 8px; color: var(--muted); font-size: 14px; }
+    .layout { margin-top: 16px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(20,45,80,0.08);
+    }
+    .panel { padding: 14px; }
+    h2 { margin: 0 0 10px; font-size: 16px; }
+    .section-title {
+      margin: 12px 0 8px;
+      font-size: 13px;
+      color: #1f4f9f;
+      font-weight: 700;
+      border-left: 4px solid #9bbdff;
+      padding-left: 8px;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .field { margin-bottom: 8px; }
+    label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+    input, select, textarea {
+      width:100%; border:1px solid var(--line); border-radius:10px; padding:10px;
+      font-size:14px; background:#fff; color:var(--ink);
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .actions { margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap; }
+    button, .btn-link {
+      border:0; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer;
+      text-decoration:none; display:inline-flex; align-items:center;
+    }
+    .primary { background: var(--accent); color:#fff; }
+    .success { background:#e8f7ee; color:#176d45; }
+    .ghost { background:#ecf3ff; color:#204c95; }
+    .status {
+      margin-top: 10px; border:1px dashed var(--line); border-radius:10px; padding:10px;
+      font-size:13px; color:var(--muted); background:#fff;
+    }
+    .status.good { color: var(--good); border-color: rgba(21,138,82,.35); }
+    .status.warn { color: var(--warn); border-color: rgba(198,119,0,.35); }
+    .status.bad { color: var(--bad); border-color: rgba(201,52,64,.35); }
+
+    .pipeline, .history, .preview {
+      border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px;
+    }
+    .pipeline, .history { max-height: 250px; overflow:auto; }
+    .preview { max-height: 240px; overflow:auto; white-space: pre-wrap; font-family: Consolas, monospace; font-size: 12px; }
+    .agent {
+      display:grid; grid-template-columns:44px 1fr auto; gap:8px; align-items:center;
+      border:1px solid rgba(16,35,63,.08); border-radius:10px; padding:8px; margin-bottom:8px;
+    }
+    .agent:last-child { margin-bottom:0; }
+    .dot { width:34px; height:34px; border-radius:8px; display:inline-block; image-rendering: pixelated; }
+    .dot.wait { background:#cfdcf3; }
+    .dot.run { background:#ffd45e; animation: hop .55s infinite alternate; }
+    .dot.ok { background:#4dd087; }
+    .dot.bad { background:#ff7f8e; }
+    @keyframes hop { from { transform:translateY(0); } to { transform:translateY(-3px); } }
+    .badge { font-size:11px; font-weight:700; border-radius:999px; padding:4px 8px; color:#fff; }
+    .b-wait { background:#7b8dab; } .b-run { background:#d88400; } .b-ok { background:#1f9d62; } .b-bad { background:#c93440; }
+    .meta { font-size:12px; color:var(--muted); }
+    .mode-chip {
+      display:inline-flex; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:700;
+      border:1px solid var(--line); background:#fff; color:var(--muted); margin-bottom:8px;
+    }
+    .mode-chip.api { color:#0b63f6; border-color:rgba(11,99,246,.35); background:#ecf3ff; }
+
+    .quality { border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px; margin-top:8px; }
+    .q-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:6px; }
+    .q-item { border:1px solid var(--line); border-radius:10px; padding:8px; }
+    .q-k { font-size:11px; color:var(--muted); }
+    .q-v { font-size:18px; font-weight:800; }
+    .history-item { border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:8px; font-size:12px; background:#fff; }
+    .history-item:last-child { margin-bottom:0; }
+    @media (max-width: 980px) { .layout { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>IRB 입력 대시보드</h1>
+    <div class="sub">API 실행 + 품질 점수 + 실행 이력</div>
+    <div class="layout">
+      <section class="card panel">
+        <h2>입력 편집</h2>
+        <div class="section-title">필수 입력</div>
+        <div class="field"><label>연구 주제</label><textarea id="research_topic"></textarea></div>
+        <div class="field"><label>연구 방법</label><textarea id="research_method"></textarea></div>
+        <div class="row">
+          <div class="field"><label>연구 시작일</label><input id="study_start" type="date" /></div>
+          <div class="field"><label>연구 종료일</label><input id="study_end" type="date" /></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>연구 대상 유형</label><input id="target_type" /></div>
+          <div class="field"><label>연구 대상 인원</label><input id="target_count" type="number" min="1" /></div>
+        </div>
+
+        <div class="section-title">추천/선택 입력</div>
+        <div class="row">
+          <div class="field"><label>연구 설계 유형</label><select id="study_design"><option value="">선택</option><option>양적</option><option>질적</option><option>혼합연구</option><option>준실험</option><option>문헌 분석</option><option>해당 없음</option></select></div>
+          <div class="field"><label>동의 방식</label><select id="consent_method"><option value="">선택</option><option>서면 동의</option><option>전자 동의</option><option>서면+전자 동의</option><option>해당없음</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>자료 수집 도구</label><input id="data_tools" /></div>
+          <div class="field"><label>연구 위험 수준</label><select id="risk_level"><option value="">선택</option><option>최소위험</option><option>최소위험 초과 가능</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>수행기관</label><input id="institution" /></div>
+          <div class="field"><label>소속</label><input id="department" /></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>민감정보 수집 여부</label><select id="sensitive_data"><option>아니오</option><option>예</option></select></div>
+          <div class="field"><label>대면 진행 여부</label><select id="face_to_face"><option>예</option><option>아니오</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>연구책임자 성명</label><input id="pi_name" /></div>
+          <div class="field"><label>연구책임자 전화번호</label><input id="pi_phone" /></div>
+        </div>
+
+        <div class="section-title">API 설정</div>
+        <div class="row">
+          <div class="field"><label>OpenAI API Key (저장 안 됨)</label><input id="api_key" type="password" placeholder="sk-..." /></div>
+          <div class="field"><label>모델</label><input id="api_model" value="gpt-4.1-mini" /></div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="saveBtn">input-form.md 저장</button>
+          <button class="success" id="runBtn">에이전트 실행</button>
+          <button class="ghost" id="reloadBtn">다시 불러오기</button>
+          <a class="btn-link ghost" href="/api/download/hwpx">IRB 신청서 다운받기</a>
+        </div>
+        <div id="status" class="status">준비됨</div>
+      </section>
+
+      <section class="card panel">
+        <h2>실행 상태</h2>
+        <div id="modeChip" class="mode-chip">실행 모드: 대기</div>
+        <div id="pipeline" class="pipeline"></div>
+        <div id="result" class="meta" style="margin-top:8px;">결과 파일: -</div>
+
+        <div class="quality">
+          <div class="q-grid">
+            <div class="q-item"><div class="q-k">종합 점수</div><div class="q-v" id="qTotal">-</div></div>
+            <div class="q-item"><div class="q-k">문장수 점수</div><div class="q-v" id="qSentence">-</div></div>
+            <div class="q-item"><div class="q-k">필수항목 점수</div><div class="q-v" id="qRequired">-</div></div>
+          </div>
+          <div id="qDetails" class="meta">품질 세부: -</div>
+        </div>
+
+        <h2 style="margin-top:12px;">실행 이력</h2>
+        <div id="history" class="history"></div>
+
+        <h2 style="margin-top:12px;">입력 파일 프리뷰</h2>
+        <pre id="preview" class="preview"></pre>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const fields = ["research_topic","research_method","study_start","study_end","target_type","target_count","study_design","consent_method","data_tools","risk_level","sensitive_data","face_to_face","institution","department","pi_name","pi_phone"];
+    const defaultStages = [
+      ["save-input","입력 저장"],
+      ["prepare","실행 준비"],
+      ["generate","본문 생성"],
+      ["postprocess","결과 정리"],
+      ["quality","품질 점수"],
+      ["history","이력 기록"],
+    ];
+    const state = { running:false, agents: defaultStages.map(([id,title])=>({id,title,status:"대기",cls:"wait"})) };
+    const $status = document.getElementById("status");
+    const $pipeline = document.getElementById("pipeline");
+    const $preview = document.getElementById("preview");
+    const $result = document.getElementById("result");
+    const $modeChip = document.getElementById("modeChip");
+    const $history = document.getElementById("history");
+
+    function setStatus(type,msg){ $status.className=`status ${type||""}`.trim(); $status.textContent=msg; }
+    function getPayload(){ const p={}; fields.forEach(id=>p[id]=document.getElementById(id).value.trim()); return p; }
+    function setForm(data){ fields.forEach(id=>{ if(Object.prototype.hasOwnProperty.call(data,id)){ document.getElementById(id).value = data[id] ?? ""; }}); }
+    function setMode(mode){ const m=(mode||"대기"); $modeChip.textContent=`실행 모드: ${m}`; $modeChip.className=`mode-chip ${String(mode).toLowerCase()==="api"?"api":""}`; }
+    function resetQuality(){ document.getElementById("qTotal").textContent="-"; document.getElementById("qSentence").textContent="-"; document.getElementById("qRequired").textContent="-"; document.getElementById("qDetails").textContent="품질 세부: -"; }
+    function setQuality(q){
+      if(!q){ resetQuality(); return; }
+      document.getElementById("qTotal").textContent = q.total ?? "-";
+      document.getElementById("qSentence").textContent = q.sentence_score ?? "-";
+      document.getElementById("qRequired").textContent = q.required_score ?? "-";
+      document.getElementById("qDetails").textContent = "품질 세부: " + (q.details || []).join(" | ");
+    }
+    function setAgentsFromServer(stages){
+      if(!Array.isArray(stages) || !stages.length){
+        resetPipeline();
+        return;
+      }
+      state.agents = stages.map(s => ({
+        id: s.id || "-",
+        title: s.title || s.id || "-",
+        status: s.status || "대기",
+        cls: s.cls || "wait",
+      }));
+      renderPipeline();
+    }
+    function renderPipeline(){
+      $pipeline.innerHTML="";
+      state.agents.forEach(a=>{
+        const badge = a.cls==="ok"?"b-ok":a.cls==="run"?"b-run":a.cls==="bad"?"b-bad":"b-wait";
+        const el=document.createElement("div");
+        el.className="agent";
+        el.innerHTML=`<span class="dot ${a.cls}"></span><div><div><b>${a.title}</b></div><div class="meta">${a.id}</div></div><span class="badge ${badge}">${a.status}</span>`;
+        $pipeline.appendChild(el);
+      });
+    }
+    function resetPipeline(){ state.agents=defaultStages.map(([id,title])=>({id,title,status:"대기",cls:"wait"})); renderPipeline(); }
+    async function loadInput(){
+      try{
+        const res=await fetch("/api/input"); const data=await res.json();
+        if(!res.ok||!data.ok) throw new Error(data.error||"로드 실패");
+        setForm(data.values||{}); $preview.textContent=data.markdown||"";
+      }catch(e){ setStatus("bad",`입력 로드 실패: ${e.message}`); }
+    }
+    async function saveInput(){
+      const p=getPayload();
+      const required=["research_topic","research_method","study_start","study_end","target_type","target_count"];
+      const miss=required.filter(k=>!p[k]);
+      if(miss.length){ setStatus("bad","필수 입력(주제/방법/기간/대상)을 확인하세요."); return false; }
+      const res=await fetch("/api/input",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p)});
+      const data=await res.json();
+      if(!res.ok||!data.ok){ setStatus("bad",`저장 실패: ${data.error||"알 수 없는 오류"}`); return false; }
+      $preview.textContent=data.markdown||""; setStatus("good",`저장 완료: ${data.path}`); return true;
+    }
+    async function loadHistory(){
+      try{
+        const res=await fetch("/api/history"); const data=await res.json();
+        if(!res.ok||!data.ok) throw new Error(data.error||"이력 로드 실패");
+        $history.innerHTML="";
+        (data.items||[]).forEach(it=>{
+          const el=document.createElement("div");
+          el.className="history-item";
+          el.innerHTML=`<div><b>${it.ok?"성공":"실패"}</b> | ${it.timestamp || "-"}</div>
+                        <div>모드: ${it.mode || "-"}, 모델: ${it.model || "-"}</div>
+                        <div>주제: ${it.topic || "-"}</div>
+                        <div>품질: ${it.quality_total ?? "-"} / 문장수: ${it.quality_sentence ?? "-"} / 필수항목: ${it.quality_required ?? "-"}</div>
+                        <div class="meta">${it.error || ""}</div>`;
+          $history.appendChild(el);
+        });
+        if(!(data.items||[]).length){ $history.textContent="실행 이력이 없습니다."; }
+      }catch(e){
+        $history.textContent=`이력 로드 실패: ${e.message}`;
+      }
+    }
+    async function runAgents(){
+      if(state.running) return;
+      state.running=true; setStatus("warn","실행 중..."); setMode("실행중"); resetPipeline(); resetQuality();
+      const values=getPayload();
+      const required=["research_topic","research_method","study_start","study_end","target_type","target_count"];
+      const miss=required.filter(k=>!values[k]);
+      if(miss.length){
+        setStatus("bad","필수 입력(주제/방법/기간/대상)을 확인하세요.");
+        state.running=false;
+        return;
+      }
+      try{
+        const runPayload = {
+          values,
+          api_key: document.getElementById("api_key").value.trim(),
+          model: document.getElementById("api_model").value.trim()
+        };
+        const res=await fetch("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(runPayload)});
+        const data=await res.json();
+        if(!(res.ok||res.status===202)||!data.ok||!data.run_id){
+          throw new Error(data.error||"실행 시작 실패");
+        }
+        if((data.warnings||[]).length){
+          setStatus("warn", data.warnings.join(" | "));
+        }
+        const runId = data.run_id;
+        let finalRun = null;
+        while(true){
+          const statusRes = await fetch(`/api/run-status?run_id=${encodeURIComponent(runId)}`);
+          const statusData = await statusRes.json();
+          if(!statusRes.ok || !statusData.ok){
+            throw new Error(statusData.error || "실행 상태 조회 실패");
+          }
+          finalRun = statusData.run || null;
+          if(finalRun){
+            setMode(finalRun.status === "running" ? "실행중" : "api");
+            setAgentsFromServer(finalRun.stages || []);
+            if(finalRun.status === "succeeded" || finalRun.status === "failed"){
+              break;
+            }
+          }
+          await new Promise(r=>setTimeout(r, 700));
+        }
+
+        const result = (finalRun && finalRun.result) ? finalRun.result : {};
+        if(finalRun.status !== "succeeded" || !result.ok){
+          throw new Error([result.error||"실행 실패", result.api_stderr||result.api_stdout||""].filter(Boolean).join(" | "));
+        }
+        setMode(result.mode||"api");
+        setQuality(result.quality || null);
+        $result.innerHTML = `결과 파일: <code>${result.outputs.hwpx}</code>, <code>${result.outputs.json}</code>, <code>${result.outputs.md}</code>`;
+        setStatus("good",`실행 완료 (${result.mode})`);
+        await loadInput();
+      }catch(e){
+        state.agents.forEach(a=>{ if(a.cls==="run"||a.cls==="wait"){ a.cls="bad"; a.status="실패"; }});
+        renderPipeline(); setMode("실패"); setStatus("bad",`실행 실패: ${e.message}`); $result.textContent="결과 파일: 실행 실패";
+      }finally{
+        state.running=false;
+        await loadHistory();
+      }
+    }
+
+    document.getElementById("reloadBtn").addEventListener("click", loadInput);
+    document.getElementById("saveBtn").addEventListener("click", saveInput);
+    document.getElementById("runBtn").addEventListener("click", runAgents);
+
+    resetPipeline(); setMode("대기"); resetQuality(); loadInput(); loadHistory();
+  </script>
+</body>
+</html>

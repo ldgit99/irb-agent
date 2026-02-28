@@ -469,12 +469,11 @@ def remove_red_runs_from_root(root: ET.Element, ns: dict, red_char_pr_ids: set[s
         for run in runs:
             char_pr = str(run.get("charPrIDRef", "")).strip()
             if char_pr in red_char_pr_ids:
-                p.remove(run)
-        # Keep paragraph structure but clear empty paragraphs to avoid leftover blank guide lines.
-        if not p.findall("./hp:run", ns):
-            parent = next((node for node in root.iter() if p in list(node)), None)
-            if parent is not None:
-                parent.remove(p)
+                # Preserve XML structure for HWPX compatibility:
+                # only clear guide text and normalize style instead of removing nodes.
+                run.set("charPrIDRef", "12")
+                for t in run.findall(".//hp:t", ns):
+                    t.text = ""
 
 
 def fill_template_tables(section_xml: str, draft: dict, red_char_pr_ids: set[str] | None = None) -> str:
@@ -672,6 +671,7 @@ def main() -> None:
     parser.add_argument("--data-tools", type=str, default="", help="자료 수집 도구")
     parser.add_argument("--pi-name", type=str, default="", help="연구책임자 성명")
     parser.add_argument("--pi-phone", type=str, default="", help="연구책임자 전화번호")
+    parser.add_argument("--additional-notes", type=str, default="", help="기타 추가 요청사항")
     parser.add_argument(
         "--model",
         type=str,
@@ -710,6 +710,7 @@ def main() -> None:
     extra_context["sensitive_data"] = args.sensitive_data
     extra_context["face_to_face"] = args.face_to_face
     if args.data_tools:     extra_context["data_tools"] = args.data_tools
+    if args.additional_notes: extra_context["additional_notes"] = args.additional_notes
     if args.study_start and args.study_end:
         extra_context["study_period_text"] = f"{args.study_start} ~ {args.study_end} ({args.duration_months}개월)"
 

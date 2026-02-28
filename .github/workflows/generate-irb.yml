@@ -13,33 +13,86 @@ on:
         default: "사전-사후 설문 및 인터뷰를 포함한 혼합연구"
       institution:
         description: "수행기관"
-        required: true
+        required: false
         default: "경북대학교"
       department:
         description: "소속"
-        required: true
+        required: false
         default: "사범대학 정보컴퓨터교육과"
       sample_size:
         description: "표본 수"
-        required: true
+        required: false
         default: "50"
+      study_start:
+        description: "연구 시작일 (YYYY-MM-DD)"
+        required: false
+        default: ""
+      study_end:
+        description: "연구 종료일 (YYYY-MM-DD)"
+        required: false
+        default: ""
       duration_months:
-        description: "연구기간(개월)"
-        required: true
+        description: "연구기간(개월) — study_start/end 제공 시 무시됨"
+        required: false
         default: "6"
+      study_design:
+        description: "연구 설계 유형 (양적/질적/혼합연구/준실험/문헌 분석)"
+        required: false
+        default: ""
+      consent_method:
+        description: "동의 방식 (서면 동의/전자 동의/서면+전자 동의/해당없음)"
+        required: false
+        default: ""
+      target_type:
+        description: "연구 대상 유형 (예: 교사, 학생)"
+        required: false
+        default: ""
+      risk_level:
+        description: "연구 위험 수준 (최소위험/최소위험 초과 가능)"
+        required: false
+        default: "최소위험"
+      sensitive_data:
+        description: "민감정보 수집 여부 (아니오/예)"
+        required: false
+        default: "아니오"
+      face_to_face:
+        description: "대면 진행 여부 (예/아니오)"
+        required: false
+        default: "예"
+      data_tools:
+        description: "자료 수집 도구 (예: 설문지, 관찰일지)"
+        required: false
+        default: ""
+      pi_name:
+        description: "연구책임자 성명"
+        required: false
+        default: "이동국"
+      pi_phone:
+        description: "연구책임자 전화번호"
+        required: false
+        default: "053-950-5845"
       model:
         description: "OpenAI 모델"
-        required: true
+        required: false
         default: "gpt-4.1-mini"
+
+permissions:
+  contents: write
 
 jobs:
   generate:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      IRB_TOPIC:      ${{ github.event.inputs.topic }}
+      IRB_MODEL:      ${{ github.event.inputs.model }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -50,27 +103,72 @@ jobs:
         shell: bash
         run: |
           if [ -z "${OPENAI_API_KEY}" ]; then
-            echo "OPENAI_API_KEY secret is missing."
+            echo "::error::OPENAI_API_KEY secret is missing. Please add it in Settings > Secrets."
             exit 1
           fi
 
       - name: Generate IRB draft
         run: |
           python irb_agent.py \
-            --topic "${{ github.event.inputs.topic }}" \
-            --method "${{ github.event.inputs.method }}" \
-            --institution "${{ github.event.inputs.institution }}" \
-            --department "${{ github.event.inputs.department }}" \
-            --sample-size "${{ github.event.inputs.sample_size }}" \
+            --topic        "${{ github.event.inputs.topic }}" \
+            --method       "${{ github.event.inputs.method }}" \
+            --institution  "${{ github.event.inputs.institution }}" \
+            --department   "${{ github.event.inputs.department }}" \
+            --sample-size  "${{ github.event.inputs.sample_size }}" \
+            --study-start  "${{ github.event.inputs.study_start }}" \
+            --study-end    "${{ github.event.inputs.study_end }}" \
             --duration-months "${{ github.event.inputs.duration_months }}" \
-            --model "${{ github.event.inputs.model }}" \
-            --output-dir output
+            --study-design "${{ github.event.inputs.study_design }}" \
+            --consent-method "${{ github.event.inputs.consent_method }}" \
+            --target-type  "${{ github.event.inputs.target_type }}" \
+            --risk-level   "${{ github.event.inputs.risk_level }}" \
+            --sensitive-data "${{ github.event.inputs.sensitive_data }}" \
+            --face-to-face "${{ github.event.inputs.face_to_face }}" \
+            --data-tools   "${{ github.event.inputs.data_tools }}" \
+            --pi-name      "${{ github.event.inputs.pi_name }}" \
+            --pi-phone     "${{ github.event.inputs.pi_phone }}" \
+            --model        "${{ github.event.inputs.model }}" \
+            --output-stem  "irb-${{ github.run_number }}" \
+            --output-dir   output
 
-      - name: Upload outputs
+      - name: Compute quality scores
+        run: |
+          python compute_quality.py \
+            --json-path output/irb-${{ github.run_number }}.json \
+            --out docs/results/quality-${{ github.run_number }}.json
+
+      - name: Write run result
+        run: python write_run_result.py
+
+      - name: Update history
+        run: python update_history.py
+
+      - name: Copy output files to docs/results
+        shell: bash
+        run: |
+          mkdir -p docs/results
+          [ -f output/irb-${{ github.run_number }}.json ] && cp output/irb-${{ github.run_number }}.json docs/results/irb-${{ github.run_number }}.json || true
+          [ -f output/irb-${{ github.run_number }}.md   ] && cp output/irb-${{ github.run_number }}.md   docs/results/irb-${{ github.run_number }}.md   || true
+          [ -f output/irb-${{ github.run_number }}.hwpx ] && cp output/irb-${{ github.run_number }}.hwpx docs/results/irb-${{ github.run_number }}.hwpx || true
+
+      - name: Commit and push results
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
+          git add docs/results/
+          git diff --staged --quiet || git commit -m "Add IRB results for run #${{ github.run_number }} [skip ci]"
+          git push
+
+      - name: Write job summary
+        run: python write_summary.py
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: irb-output-${{ github.run_number }}
           path: |
-            output/*.json
-            output/*.md
-            output/*.hwpx
+            output/irb-${{ github.run_number }}.json
+            output/irb-${{ github.run_number }}.md
+            output/irb-${{ github.run_number }}.hwpx

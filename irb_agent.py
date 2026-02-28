@@ -160,6 +160,7 @@ def generate_sections_with_llm(
     sample_size: int,
     duration_months: int,
     model: str,
+    extra_context: dict | None = None,
 ) -> dict:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -175,6 +176,7 @@ def generate_sections_with_llm(
             "duration_months": duration_months,
             "template_guidelines": TEMPLATE_GUIDELINES,
             "template_examples": TEMPLATE_EXAMPLES,
+            **(extra_context or {}),
         },
         "task": (
             "위 정보를 바탕으로 IRB 연구계획서 초안을 한국어로 작성하라. "
@@ -275,6 +277,8 @@ def build_irb_draft(
     sample_size: int,
     duration_months: int,
     model: str,
+    extra_context: dict | None = None,
+    pi_info: dict | None = None,
 ) -> dict:
     today = date.today().isoformat()
     sections = generate_sections_with_llm(
@@ -285,7 +289,10 @@ def build_irb_draft(
         sample_size=sample_size,
         duration_months=duration_months,
         model=model,
+        extra_context=extra_context,
     )
+    pi = {**PI_FIXED, **{k: v for k, v in (pi_info or {}).items() if v}}
+    study_period = (extra_context or {}).get("study_period_text", "")
     return {
         "meta": {
             "created_at": today,
@@ -294,6 +301,10 @@ def build_irb_draft(
             "institution": institution,
             "department": department,
             "llm_model": model,
+            "study_period_text": study_period,
+            "pi": pi,
+            "pi_name": pi["name"],
+            "pi_affiliation": institution or pi["affiliation"],
         },
         "sections": sections,
     }
@@ -445,10 +456,11 @@ def fill_template_tables(section_xml: str, draft: dict) -> str:
             elif "실시기관 주소" in first and len(tcs) >= 2:
                 _set_tc_text(tcs[1], "해당없음", ns_uri, char_pr_id="12")
             elif "연구 책임자" in first and len(tcs) >= 2:
+                pi = {**PI_FIXED, **{k: v for k, v in (meta.get("pi") or {}).items() if v}}
                 fixed = (
-                    f"성명: {PI_FIXED['name']} / 직위: {PI_FIXED['position']} / 소속: {PI_FIXED['affiliation']} "
-                    f"/ 전공분야: {PI_FIXED['major']} / 전화번호(Tel): {PI_FIXED['tel']} / (H.P): {PI_FIXED['hp']} "
-                    f"/ e-mail: {PI_FIXED['email']}"
+                    f"성명: {pi['name']} / 직위: {pi['position']} / 소속: {pi['affiliation']} "
+                    f"/ 전공분야: {pi['major']} / 전화번호(Tel): {pi['tel']} / (H.P): {pi['hp']} "
+                    f"/ e-mail: {pi['email']}"
                 )
                 _set_tc_text(tcs[1], fixed, ns_uri, char_pr_id="12")
 
@@ -535,7 +547,18 @@ def main() -> None:
     parser.add_argument("--institution", type=str, default="", help="수행기관")
     parser.add_argument("--department", type=str, default="", help="소속")
     parser.add_argument("--sample-size", type=int, default=None, help="표본 수")
-    parser.add_argument("--duration-months", type=int, default=None, help="연구기간(개월)")
+    parser.add_argument("--duration-months", type=int, default=None, help="연구기간(개월). study-start/end 제공 시 자동 계산")
+    parser.add_argument("--study-start", type=str, default="", help="연구 시작일 (YYYY-MM-DD)")
+    parser.add_argument("--study-end", type=str, default="", help="연구 종료일 (YYYY-MM-DD)")
+    parser.add_argument("--study-design", type=str, default="", help="연구 설계 유형 (양적/질적/혼합연구 등)")
+    parser.add_argument("--consent-method", type=str, default="", help="동의 방식 (서면/전자 등)")
+    parser.add_argument("--target-type", type=str, default="", help="연구 대상 유형 (예: 교사)")
+    parser.add_argument("--risk-level", type=str, default="", help="연구 위험 수준 (최소위험 등)")
+    parser.add_argument("--sensitive-data", type=str, default="아니오", help="민감정보 수집 여부")
+    parser.add_argument("--face-to-face", type=str, default="예", help="대면 진행 여부")
+    parser.add_argument("--data-tools", type=str, default="", help="자료 수집 도구")
+    parser.add_argument("--pi-name", type=str, default="", help="연구책임자 성명")
+    parser.add_argument("--pi-phone", type=str, default="", help="연구책임자 전화번호")
     parser.add_argument(
         "--model",
         type=str,
@@ -549,8 +572,38 @@ def main() -> None:
         help="원본 HWPX 템플릿 경로",
     )
     parser.add_argument("--output-dir", type=Path, default=Path("output"), help="출력 디렉터리")
+    parser.add_argument("--output-stem", type=str, default="", help="출력 파일 기본 이름 (비어있으면 주제 기반)")
 
     args = ask_if_missing(parser.parse_args())
+
+    # duration_months: compute from dates if not provided
+    if args.duration_months is None:
+        if args.study_start and args.study_end:
+            try:
+                s_year, s_month = int(args.study_start[:4]), int(args.study_start[5:7])
+                e_year, e_month = int(args.study_end[:4]), int(args.study_end[5:7])
+                args.duration_months = max((e_year - s_year) * 12 + (e_month - s_month) + 1, 1)
+            except Exception:
+                args.duration_months = 6
+        else:
+            args.duration_months = 6
+
+    # Build extra_context from optional fields
+    extra_context: dict = {}
+    if args.study_design:   extra_context["study_design"] = args.study_design
+    if args.consent_method: extra_context["consent_method"] = args.consent_method
+    if args.target_type:    extra_context["target_type"] = args.target_type
+    if args.risk_level:     extra_context["risk_level"] = args.risk_level
+    extra_context["sensitive_data"] = args.sensitive_data
+    extra_context["face_to_face"] = args.face_to_face
+    if args.data_tools:     extra_context["data_tools"] = args.data_tools
+    if args.study_start and args.study_end:
+        extra_context["study_period_text"] = f"{args.study_start} ~ {args.study_end} ({args.duration_months}개월)"
+
+    # Build pi_info override (only non-empty values)
+    pi_info: dict = {}
+    if args.pi_name:  pi_info["name"] = args.pi_name
+    if args.pi_phone: pi_info["hp"] = args.pi_phone; pi_info["tel"] = args.pi_phone
 
     draft = build_irb_draft(
         topic=args.topic,
@@ -560,21 +613,26 @@ def main() -> None:
         sample_size=args.sample_size,
         duration_months=args.duration_months,
         model=args.model,
+        extra_context=extra_context or None,
+        pi_info=pi_info or None,
     )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    stem = sanitize_filename(args.topic)
+    stem = args.output_stem.strip() if args.output_stem else sanitize_filename(args.topic)
     json_path = args.output_dir / f"{stem}.json"
-    md_path = args.output_dir / f"{stem}.md"
+    md_path   = args.output_dir / f"{stem}.md"
     hwpx_path = args.output_dir / f"{stem}.hwpx"
 
     json_path.write_text(json.dumps(draft, ensure_ascii=False, indent=2), encoding="utf-8")
     md_path.write_text(render_markdown(draft), encoding="utf-8")
-    write_hwpx_from_template(args.template, hwpx_path, draft)
+    if args.template.exists():
+        write_hwpx_from_template(args.template, hwpx_path, draft)
+        print(f"생성 완료: {hwpx_path}")
+    else:
+        print(f"HWPX 템플릿을 찾을 수 없습니다 ({args.template}). JSON/MD만 생성합니다.")
 
     print(f"생성 완료: {json_path}")
     print(f"생성 완료: {md_path}")
-    print(f"생성 완료: {hwpx_path}")
 
 
 if __name__ == "__main__":

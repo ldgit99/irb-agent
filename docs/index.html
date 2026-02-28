@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IRB Generator (GitHub Actions)</title>
+  <title>IRB 자동생성 대시보드</title>
   <style>
     :root {
       --bg-1: #f4f8ff;
@@ -28,102 +28,71 @@
         linear-gradient(150deg, var(--bg-1), var(--bg-2));
       min-height: 100vh;
     }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 24px; }
+    .wrap { max-width: 1300px; margin: 0 auto; padding: 24px; }
 
-    /* ── Header ───────────────────────────────────────────────── */
+    /* ── Header ───────────────────────────────────────────── */
     .page-header { margin-bottom: 16px; }
     h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
     .sub { margin-top: 6px; color: var(--muted); font-size: 14px; }
 
-    /* ── Cards ───────────────────────────────────────────────── */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: 0 8px 24px rgba(20,45,80,0.08);
-    }
-    h2 { margin: 0 0 4px; font-size: 16px; }
-    .hint { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+    /* ── Layout ──────────────────────────────────────────── */
+    .layout { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 24px rgba(20,45,80,0.08); }
+    .panel { padding: 16px; }
 
-    /* ── Section titles ──────────────────────────────────────── */
+    /* ── Typography ──────────────────────────────────────── */
+    h2 { margin: 0 0 10px; font-size: 16px; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .panel-header h2 { margin: 0; }
+    .hint { margin: 0 0 10px; font-size: 12px; color: var(--muted); }
+    .required-mark { color: var(--bad); font-weight: 700; }
     .section-title {
       margin: 14px 0 8px;
-      font-size: 11px;
-      color: #1f4f9f;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-left: 3px solid #9bbdff;
-      padding-left: 8px;
+      font-size: 11px; color: #1f4f9f; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      border-left: 3px solid #9bbdff; padding-left: 8px;
+    }
+    .section-sep {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--muted);
+      margin: 12px 0 7px; padding-bottom: 5px;
+      border-bottom: 1px solid var(--line);
     }
 
-    /* ── Form ────────────────────────────────────────────────── */
+    /* ── Form ────────────────────────────────────────────── */
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .field { margin-bottom: 8px; }
     label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
-    input, textarea, select {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 9px 12px;
-      font-size: 14px;
-      background: #fff;
-      color: var(--ink);
-      font-family: inherit;
-      transition: border-color 0.15s, box-shadow 0.15s;
+    input, select, textarea {
+      width: 100%; border: 1px solid var(--line); border-radius: 10px;
+      padding: 9px 12px; font-size: 14px; background: #fff; color: var(--ink);
+      font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s;
     }
-    input:focus, textarea:focus, select:focus {
-      outline: none;
-      border-color: var(--accent);
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(11,99,246,0.12);
     }
-    input.invalid, textarea.invalid {
-      border-color: var(--bad);
-      background: #fff8f8;
-    }
-    input.invalid:focus, textarea.invalid:focus {
-      box-shadow: 0 0 0 3px rgba(201,52,64,0.12);
-    }
-    textarea { min-height: 72px; resize: vertical; }
-    .required { color: var(--bad); font-weight: 700; }
-
-    /* ── Char counter ────────────────────────────────────────── */
+    input.invalid, textarea.invalid { border-color: var(--bad); background: #fff8f8; }
+    input.invalid:focus, textarea.invalid:focus { box-shadow: 0 0 0 3px rgba(201,52,64,0.12); }
+    textarea { min-height: 68px; resize: vertical; }
     .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 2px; }
 
-    /* ── Password toggle ─────────────────────────────────────── */
+    /* ── Password toggle ─────────────────────────────────── */
     .pwd-wrap { position: relative; }
     .pwd-wrap input { padding-right: 54px; }
     .pwd-btn {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
-      border: none;
-      background: #ecf3ff;
-      color: var(--accent);
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      line-height: 1.5;
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      border: none; background: #ecf3ff; color: var(--accent);
+      border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700;
+      cursor: pointer; line-height: 1.5;
     }
     .pwd-btn:hover { background: #dde9ff; }
 
-    /* ── Buttons ─────────────────────────────────────────────── */
-    button {
-      border: 0;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-family: inherit;
-      font-size: 14px;
+    /* ── Buttons ─────────────────────────────────────────── */
+    button, .btn-link {
+      border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 700;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+      gap: 5px; font-family: inherit; font-size: 14px;
       transition: opacity 0.15s, transform 0.1s, background 0.15s;
     }
     button:active:not(:disabled) { transform: scale(0.97); }
@@ -132,176 +101,363 @@
     .primary:hover:not(:disabled) { background: #0953d4; }
     .ghost { background: #ecf3ff; color: #204c95; }
     .ghost:hover { background: #dde9ff; }
+    .ghost.sm { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
+    .ghost.danger { background: #fff5f6; color: var(--bad); }
+    .ghost.danger:hover { background: #feecee; }
 
-    /* Actions row */
-    .actions-primary { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-    .actions-primary .run-btn { flex: 1; justify-content: center; font-size: 15px; padding: 12px; min-width: 180px; }
+    .actions-primary { display: flex; gap: 8px; margin-top: 14px; }
+    .actions-primary .run-btn { flex: 1; justify-content: center; font-size: 15px; padding: 12px; }
+    .actions-secondary { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 
-    /* ── Status bar ──────────────────────────────────────────── */
+    /* ── Status bar ──────────────────────────────────────── */
     .status {
-      margin-top: 10px;
-      border: 1px dashed var(--line);
-      border-radius: 10px;
-      padding: 9px 12px;
-      font-size: 13px;
-      color: var(--muted);
-      background: #fff;
-      white-space: pre-wrap;
-      word-break: break-word;
+      margin-top: 10px; border: 1px dashed var(--line); border-radius: 10px;
+      padding: 9px 12px; font-size: 13px; color: var(--muted); background: #fff;
     }
     .status.ok   { color: var(--good); border-color: rgba(21,138,82,.3);  background: #f3fbf6; }
     .status.warn { color: var(--warn); border-color: rgba(198,119,0,.3);  background: #fffbf3; }
     .status.bad  { color: var(--bad);  border-color: rgba(201,52,64,.3);   background: #fff5f6; }
 
-    /* ── Links / result area ─────────────────────────────────── */
-    .result-line {
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--muted);
-      padding: 7px 12px;
-      background: #f8faff;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      white-space: pre-wrap;
-      word-break: break-all;
-      font-family: "Consolas", "D2Coding", monospace;
+    /* ── Mode chip ───────────────────────────────────────── */
+    .mode-chip {
+      display: inline-flex; border-radius: 999px; padding: 4px 11px;
+      font-size: 11px; font-weight: 700; border: 1px solid var(--line);
+      background: #fff; color: var(--muted);
     }
-    .result-line a { color: var(--accent); }
+    .mode-chip.running { color: var(--warn); border-color: rgba(198,119,0,.3); background: #fffbf3; }
+    .mode-chip.success { color: var(--good); border-color: rgba(21,138,82,.3); background: #f3fbf6; }
+    .mode-chip.fail    { color: var(--bad);  border-color: rgba(201,52,64,.3);  background: #fff5f6; }
 
-    /* ── Spinner ─────────────────────────────────────────────── */
-    .run-spin { display: inline-block; animation: spin 1s linear infinite; }
+    /* ── Stepper pipeline ────────────────────────────────── */
+    .stepper { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 8px 10px; position: relative; }
+    .stepper-connector { position: absolute; left: 31px; top: 30px; bottom: 30px; width: 2px; background: var(--line); border-radius: 1px; z-index: 0; }
+    .step { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: center; padding: 5px 0; position: relative; }
+    .step-dot {
+      width: 34px; height: 34px; border-radius: 50%; background: #cfdcf3;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: #fff; z-index: 1; margin: 0 auto; flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .step.ok   .step-dot { background: var(--good); }
+    .step.run  .step-dot { background: var(--warn); animation: hop 0.55s infinite alternate; }
+    .step.bad  .step-dot { background: var(--bad); }
+    .step.skip .step-dot { background: #9aabb8; }
+    .step-title { font-size: 13px; font-weight: 600; line-height: 1.2; }
+    .step-id    { font-size: 11px; color: var(--muted); }
+    .badge { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; color: #fff; white-space: nowrap; }
+    .b-wait { background: #7b8dab; } .b-run { background: var(--warn); }
+    .b-ok   { background: var(--good); } .b-bad { background: var(--bad); }
+    .b-skip { background: #9aabb8; }
+
+    /* ── Quality bars ────────────────────────────────────── */
+    .quality { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px 12px; }
+    .q-row { display: grid; grid-template-columns: 56px 1fr 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .q-row:last-of-type { margin-bottom: 0; }
+    .q-name { font-size: 12px; color: var(--muted); }
+    .q-bar-wrap { background: #eef2fb; border-radius: 999px; height: 7px; overflow: hidden; }
+    .q-bar { height: 100%; border-radius: 999px; background: #cfdcf3; width: 0%; transition: width 0.6s cubic-bezier(0.4,0,0.2,1), background 0.3s; }
+    .q-bar.good { background: var(--good); } .q-bar.warn { background: var(--warn); } .q-bar.bad { background: var(--bad); }
+    .q-val { font-size: 13px; font-weight: 800; text-align: right; }
+    .q-details { font-size: 11px; color: var(--muted); margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--line); }
+
+    /* ── History ─────────────────────────────────────────── */
+    .history-wrap { border: 1px solid var(--line); border-radius: 12px; background: #fff; max-height: 200px; overflow-y: auto; padding: 6px; }
+    .history-item { border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; padding: 7px 10px; margin-bottom: 6px; font-size: 12px; background: #fff; }
+    .history-item:last-child { margin-bottom: 0; }
+    .history-item.ok   { border-left-color: var(--good); }
+    .history-item.fail { border-left-color: var(--bad); }
+    .hi-header  { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .hi-badge   { font-size: 10px; font-weight: 700; border-radius: 999px; padding: 2px 7px; color: #fff; }
+    .hi-time    { font-size: 11px; color: var(--muted); margin-left: auto; }
+    .hi-topic   { font-weight: 600; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hi-meta    { color: var(--muted); font-size: 11px; }
+    .hi-quality { color: var(--muted); font-size: 11px; }
+
+    /* ── Download links ──────────────────────────────────── */
+    .download-area { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px 12px; }
+    .dl-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .dl-row:last-child { margin-bottom: 0; }
+    .dl-label { font-size: 12px; color: var(--muted); }
+    .dl-btn {
+      font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 8px;
+      background: #ecf3ff; color: #204c95; border: 1px solid rgba(11,99,246,.15);
+      text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .dl-btn:hover { background: #dde9ff; }
+    .dl-btn:disabled, .dl-btn[aria-disabled="true"] { opacity: 0.4; pointer-events: none; }
+
+    /* ── Result line ─────────────────────────────────────── */
+    .result-line { font-size: 12px; color: var(--muted); margin-top: 6px; padding: 6px 10px; background: #f8faff; border-radius: 8px; border: 1px solid var(--line); }
+
+    /* ── Spinners ────────────────────────────────────────── */
+    .spin-icon { display: inline-block; animation: spin 1s linear infinite; }
+    .run-spin  { display: inline-block; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes hop  { from { transform: translateY(0); } to { transform: translateY(-3px); } }
 
-    /* ── Mobile ──────────────────────────────────────────────── */
+    /* ── Mobile ──────────────────────────────────────────── */
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
     @media (max-width: 640px) {
       .wrap { padding: 12px; }
       h1 { font-size: 22px; }
       .row { grid-template-columns: 1fr; }
       .actions-primary { flex-direction: column; }
+      .actions-secondary { gap: 4px; }
+      .actions-secondary button { font-size: 11px; padding: 5px 8px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="page-header">
-      <h1>IRB 자동생성</h1>
-      <p class="sub">GitHub Pages에서 실행되는 정적 UI입니다. 입력값으로 Actions 워크플로우를 호출해 IRB 초안을 생성합니다.</p>
+      <h1>IRB 자동생성 대시보드</h1>
+      <p class="sub">GitHub Actions 기반 IRB 연구계획서 자동 생성 · 결과는 저장소에 자동 커밋됩니다</p>
     </div>
 
-    <!-- ── 1) GitHub 연결 ───────────────────────────────────── -->
-    <section class="card">
-      <h2>1) GitHub 연결</h2>
-      <p class="hint">PAT 필요 권한(권장): 저장소 접근 + Actions 실행/조회 권한. 토큰은 브라우저 메모리에서만 사용됩니다.</p>
+    <div class="layout">
+      <!-- ── Left: Input Form ──────────────────────────────── -->
+      <section class="card panel">
 
-      <div class="row">
-        <div class="field"><label>Owner</label><input id="owner" value="ldgit99" /></div>
-        <div class="field"><label>Repository</label><input id="repo" value="irb-agent" /></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Branch (ref)</label><input id="ref" value="main" /></div>
-        <div class="field"><label>Workflow file</label><input id="workflow" value="generate-irb.yml" /></div>
-      </div>
-      <div class="field">
-        <label>GitHub Personal Access Token <span class="required">*</span></label>
-        <div class="pwd-wrap">
-          <input id="token" type="password" placeholder="ghp_..." />
-          <button type="button" id="tokenToggle" class="pwd-btn">보기</button>
+        <!-- GitHub 연결 -->
+        <h2>GitHub 연결</h2>
+        <p class="hint">PAT 권한: <code>repo</code> + <code>actions:write</code>. 토큰은 세션에만 보관됩니다.</p>
+        <div class="row">
+          <div class="field"><label>Owner</label><input id="owner" value="ldgit99" /></div>
+          <div class="field"><label>Repository</label><input id="repo" value="irb-agent" /></div>
         </div>
-      </div>
-    </section>
+        <div class="row">
+          <div class="field"><label>Branch</label><input id="ref" value="main" /></div>
+          <div class="field"><label>Workflow 파일</label><input id="workflow" value="generate-irb.yml" /></div>
+        </div>
+        <div class="field">
+          <label>GitHub Personal Access Token <span class="required-mark">*</span></label>
+          <div class="pwd-wrap">
+            <input id="token" type="password" placeholder="ghp_..." />
+            <button type="button" id="tokenToggle" class="pwd-btn">보기</button>
+          </div>
+        </div>
 
-    <!-- ── 2) IRB 입력 양식 ─────────────────────────────────── -->
-    <section class="card">
-      <h2>2) IRB 입력 양식</h2>
+        <!-- IRB 입력 -->
+        <div class="section-title">필수 입력</div>
+        <div class="field">
+          <label>연구 주제 <span class="required-mark">*</span></label>
+          <textarea id="topic" placeholder="예: 생성형 AI 활용 수업이 학습 몰입에 미치는 영향"></textarea>
+          <div class="char-count" id="topic_count">0자</div>
+        </div>
+        <div class="field">
+          <label>연구 방법 <span class="required-mark">*</span></label>
+          <textarea id="method" placeholder="예: 사전-사후 검사, 설문, 인터뷰를 포함한 혼합연구"></textarea>
+          <div class="char-count" id="method_count">0자</div>
+        </div>
+        <div class="row">
+          <div class="field"><label>연구 시작일</label><input id="study_start" type="date" /></div>
+          <div class="field"><label>연구 종료일</label><input id="study_end" type="date" /></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>연구 대상 유형</label><input id="target_type" placeholder="예: 고등학교 교사" /></div>
+          <div class="field"><label>표본 수</label><input id="sample_size" type="number" min="1" value="50" /></div>
+        </div>
 
-      <div class="field">
-        <label>연구 주제 <span class="required">*</span></label>
-        <textarea id="topic">바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향</textarea>
-        <div class="char-count" id="topic_count">0자</div>
-      </div>
-      <div class="field">
-        <label>연구 방법 <span class="required">*</span></label>
-        <textarea id="method">10차시 수업, 문제해결력 사전-사후 검사</textarea>
-        <div class="char-count" id="method_count">0자</div>
-      </div>
-      <div class="row">
-        <div class="field"><label>수행기관</label><input id="institution" value="경북대학교" /></div>
-        <div class="field"><label>소속</label><input id="department" value="사범대학 정보컴퓨터교육과" /></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>표본 수</label><input id="sample_size" type="number" min="1" value="50" /></div>
-        <div class="field"><label>연구기간 (개월)</label><input id="duration_months" type="number" min="1" value="6" /></div>
-      </div>
-      <div class="field"><label>모델</label><input id="model" value="gpt-4.1-mini" /></div>
+        <div class="section-title">선택 입력</div>
+        <div class="row">
+          <div class="field"><label>연구 설계 유형</label>
+            <select id="study_design"><option value="">선택</option><option>양적</option><option>질적</option><option>혼합연구</option><option>준실험</option><option>문헌 분석</option><option>해당 없음</option></select>
+          </div>
+          <div class="field"><label>동의 방식</label>
+            <select id="consent_method"><option value="">선택</option><option>서면 동의</option><option>전자 동의</option><option>서면+전자 동의</option><option>해당없음</option></select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>자료 수집 도구</label><input id="data_tools" placeholder="예: 설문지, 관찰일지" /></div>
+          <div class="field"><label>위험 수준</label>
+            <select id="risk_level"><option value="">선택</option><option>최소위험</option><option>최소위험 초과 가능</option></select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>수행기관</label><input id="institution" value="경북대학교" /></div>
+          <div class="field"><label>소속</label><input id="department" value="사범대학 정보컴퓨터교육과" /></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>민감정보 수집</label>
+            <select id="sensitive_data"><option>아니오</option><option>예</option></select>
+          </div>
+          <div class="field"><label>대면 진행</label>
+            <select id="face_to_face"><option>예</option><option>아니오</option></select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>연구책임자 성명</label><input id="pi_name" value="이동국" /></div>
+          <div class="field"><label>연구책임자 전화번호</label><input id="pi_phone" value="053-950-5845" /></div>
+        </div>
+        <div class="field"><label>OpenAI 모델</label><input id="model" value="gpt-4.1-mini" /></div>
 
-      <!-- Actions -->
-      <div class="actions-primary">
-        <button class="primary run-btn" id="runBtn">▶ 워크플로우 실행</button>
-        <button class="ghost" id="fillBtn">예시 채우기</button>
-      </div>
+        <!-- Actions -->
+        <div class="actions-primary">
+          <button class="primary run-btn" id="runBtn">▶ 워크플로우 실행</button>
+        </div>
+        <div class="actions-secondary">
+          <button class="ghost sm" id="exampleBtn">예시 채우기</button>
+          <button class="ghost sm danger" id="clearBtn">초기화</button>
+        </div>
 
-      <div id="status" class="status">준비됨</div>
-      <div id="links" class="result-line">실행 링크: -</div>
-    </section>
+        <div id="status" class="status">준비됨. GitHub PAT를 입력하고 실행하세요.</div>
+      </section>
+
+      <!-- ── Right: Status Panel ───────────────────────────── -->
+      <section class="card panel">
+        <div class="panel-header">
+          <h2>실행 상태</h2>
+          <span id="modeChip" class="mode-chip">대기</span>
+        </div>
+
+        <div id="pipeline" class="stepper"></div>
+        <div id="runLink" class="result-line">Actions 실행 링크: -</div>
+
+        <div class="section-sep">품질 점수</div>
+        <div class="quality">
+          <div class="q-row">
+            <div class="q-name">종합</div>
+            <div class="q-bar-wrap"><div class="q-bar" id="qBarTotal"></div></div>
+            <div class="q-val" id="qTotal">-</div>
+          </div>
+          <div class="q-row">
+            <div class="q-name">문장수</div>
+            <div class="q-bar-wrap"><div class="q-bar" id="qBarSentence"></div></div>
+            <div class="q-val" id="qSentence">-</div>
+          </div>
+          <div class="q-row">
+            <div class="q-name">필수항목</div>
+            <div class="q-bar-wrap"><div class="q-bar" id="qBarRequired"></div></div>
+            <div class="q-val" id="qRequired">-</div>
+          </div>
+          <div id="qDetails" class="q-details">세부: -</div>
+        </div>
+
+        <div class="section-sep">결과 파일 다운로드</div>
+        <div class="download-area" id="downloadArea">
+          <div class="dl-row">
+            <span class="dl-label">HWPX (한글 문서)</span>
+            <a class="dl-btn" id="dlHwpx" aria-disabled="true">↓ 다운로드</a>
+          </div>
+          <div class="dl-row">
+            <span class="dl-label">Markdown</span>
+            <a class="dl-btn" id="dlMd" aria-disabled="true">↓ 다운로드</a>
+          </div>
+          <div class="dl-row">
+            <span class="dl-label">JSON (원본 데이터)</span>
+            <a class="dl-btn" id="dlJson" aria-disabled="true">↓ 다운로드</a>
+          </div>
+          <div id="dlNote" style="font-size:11px;color:var(--muted);margin-top:6px;">실행 완료 후 GitHub Pages 배포(1~2분)가 끝나면 활성화됩니다.</div>
+        </div>
+
+        <div class="section-sep">실행 이력</div>
+        <div id="history" class="history-wrap">이력을 불러오는 중...</div>
+      </section>
+    </div>
   </div>
 
   <script>
-    const $ = (id) => document.getElementById(id);
+    // ── Constants ─────────────────────────────────────────────────────────────
 
-    // ── Status helpers ────────────────────────────────────────────────────────
+    // Steps shown in the pipeline (GitHub Actions step names → Korean labels)
+    const DISPLAY_STEPS = {
+      "Validate secret":         "입력 검증",
+      "Generate IRB draft":      "IRB 본문 생성",
+      "Compute quality scores":  "품질 점수 계산",
+      "Write run result":        "결과 기록",
+      "Update history":          "이력 갱신",
+      "Copy output files to docs/results": "파일 정리",
+      "Commit and push results": "결과 저장",
+      "Upload artifacts":        "파일 업로드",
+    };
+
+    const DEFAULT_STEPS = Object.entries(DISPLAY_STEPS).map(([id, title], i) => ({
+      id, title, status: "대기", cls: "wait", num: i + 1,
+    }));
+
+    // ── State ─────────────────────────────────────────────────────────────────
+
+    let running = false;
+    let elapsedTimer = null;
+    let pollTimer = null;
+    let resultPollTimer = null;
+    let currentRunNumber = null;
+
+    // ── DOM refs ──────────────────────────────────────────────────────────────
+
+    const $status   = document.getElementById("status");
+    const $pipeline = document.getElementById("pipeline");
+    const $modeChip = document.getElementById("modeChip");
+    const $runLink  = document.getElementById("runLink");
+    const $history  = document.getElementById("history");
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     function setStatus(cls, msg) {
-      const el = $("status");
-      el.className = `status ${cls || ""}`.trim();
-      el.textContent = msg;
+      $status.className = `status ${cls||""}`.trim();
+      $status.textContent = msg;
     }
-    function setLinks(msg) { $("links").textContent = msg; }
 
-    // ── Char counters ─────────────────────────────────────────────────────────
-
-    function updateCharCount(inputId, countId) {
-      const el = $(inputId);
-      const counter = $(countId);
-      if (el && counter) counter.textContent = el.value.length + "자";
+    function setMode(label, cls = "") {
+      $modeChip.textContent = label;
+      $modeChip.className = `mode-chip ${cls}`.trim();
     }
-    $("topic").addEventListener("input",  () => updateCharCount("topic",  "topic_count"));
-    $("method").addEventListener("input", () => updateCharCount("method", "method_count"));
 
-    // ── Real-time validation ──────────────────────────────────────────────────
+    function cfg() {
+      return {
+        owner:    document.getElementById("owner").value.trim(),
+        repo:     document.getElementById("repo").value.trim(),
+        ref:      document.getElementById("ref").value.trim(),
+        workflow: document.getElementById("workflow").value.trim(),
+        token:    document.getElementById("token").value.trim(),
+      };
+    }
 
-    ["topic", "method", "token"].forEach(id => {
-      const el = $(id);
-      if (el) el.addEventListener("input", function() {
-        if (this.value.trim()) this.classList.remove("invalid");
-      });
-    });
+    function inputs() {
+      return {
+        topic:           document.getElementById("topic").value.trim(),
+        method:          document.getElementById("method").value.trim(),
+        institution:     document.getElementById("institution").value.trim(),
+        department:      document.getElementById("department").value.trim(),
+        sample_size:     document.getElementById("sample_size").value.trim(),
+        study_start:     document.getElementById("study_start").value.trim(),
+        study_end:       document.getElementById("study_end").value.trim(),
+        duration_months: "6",
+        study_design:    document.getElementById("study_design").value.trim(),
+        consent_method:  document.getElementById("consent_method").value.trim(),
+        target_type:     document.getElementById("target_type").value.trim(),
+        risk_level:      document.getElementById("risk_level").value.trim(),
+        sensitive_data:  document.getElementById("sensitive_data").value.trim(),
+        face_to_face:    document.getElementById("face_to_face").value.trim(),
+        data_tools:      document.getElementById("data_tools").value.trim(),
+        pi_name:         document.getElementById("pi_name").value.trim(),
+        pi_phone:        document.getElementById("pi_phone").value.trim(),
+        model:           document.getElementById("model").value.trim() || "gpt-4.1-mini",
+      };
+    }
 
-    // ── Password toggle ───────────────────────────────────────────────────────
-
-    $("tokenToggle").addEventListener("click", function() {
-      const el = $("token");
-      if (el.type === "password") { el.type = "text";     this.textContent = "숨기기"; }
-      else                        { el.type = "password"; this.textContent = "보기"; }
-    });
+    function ghHeaders(token) {
+      return {
+        "Accept": "application/vnd.github+json",
+        "Authorization": `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+      };
+    }
 
     // ── Running state ─────────────────────────────────────────────────────────
 
-    let elapsedTimer = null;
-
-    function setRunning(running) {
-      const btn = $("runBtn");
-      if (running) {
+    function setRunning(on) {
+      running = on;
+      const btn = document.getElementById("runBtn");
+      if (on) {
         btn.disabled = true;
-        let elapsed = 0;
+        let sec = 0;
         btn.innerHTML = '<span class="run-spin">⟳</span> 실행 중... <span id="elapsed">00:00</span>';
         elapsedTimer = setInterval(() => {
-          elapsed++;
-          const el = $("elapsed");
-          if (el) {
-            const m = String(Math.floor(elapsed / 60)).padStart(2, "0");
-            const s = String(elapsed % 60).padStart(2, "0");
-            el.textContent = `${m}:${s}`;
-          }
+          sec++;
+          const el = document.getElementById("elapsed");
+          if (el) el.textContent = `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`;
         }, 1000);
       } else {
         btn.disabled = false;
@@ -310,38 +466,136 @@
       }
     }
 
-    // ── Fill example ──────────────────────────────────────────────────────────
+    // ── Pipeline ──────────────────────────────────────────────────────────────
 
-    function fillRequestedExample() {
-      $("topic").value           = "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향";
-      $("method").value          = "10차시 수업, 문제해결력 사전-사후 검사";
-      $("institution").value     = "경북대학교";
-      $("department").value      = "사범대학 정보컴퓨터교육과";
-      $("sample_size").value     = "50";
-      $("duration_months").value = "6";
-      $("model").value           = "gpt-4.1-mini";
-      updateCharCount("topic",  "topic_count");
-      updateCharCount("method", "method_count");
-      setStatus("ok", "예시값을 적용했습니다.");
+    function renderPipeline(steps) {
+      $pipeline.innerHTML = '<div class="stepper-connector"></div>';
+      steps.forEach((s, i) => {
+        const clsMap = { ok: "b-ok", run: "b-run", bad: "b-bad", skip: "b-skip", wait: "b-wait" };
+        const iconMap = { ok: "✓", bad: "✕", run: '<span class="spin-icon">⟳</span>', skip: "–" };
+        const icon = iconMap[s.cls] ?? String(i + 1);
+        const badge = clsMap[s.cls] ?? "b-wait";
+        const el = document.createElement("div");
+        el.className = `step ${s.cls}`;
+        el.innerHTML = `<div class="step-dot">${icon}</div><div><div class="step-title">${s.title}</div><div class="step-id">${s.id}</div></div><span class="badge ${badge}">${s.status}</span>`;
+        $pipeline.appendChild(el);
+      });
     }
 
-    // ── GitHub API helpers ────────────────────────────────────────────────────
+    function resetPipeline() {
+      renderPipeline(DEFAULT_STEPS);
+    }
 
-    function headers(token) {
-      return {
-        "Accept": "application/vnd.github+json",
-        "Authorization": `Bearer ${token}`,
-        "X-GitHub-Api-Version": "2022-11-28",
-        "Content-Type": "application/json"
+    // Map GitHub step status → display
+    function stepsFromJobs(jobs) {
+      const job = jobs[0];
+      if (!job) return null;
+      const steps = job.steps || [];
+      const result = [];
+      steps.forEach((step, i) => {
+        const label = DISPLAY_STEPS[step.name];
+        if (!label) return;
+        let cls = "wait", status = "대기";
+        if (step.status === "in_progress") { cls = "run"; status = "실행중"; }
+        else if (step.status === "completed") {
+          if (step.conclusion === "success")  { cls = "ok";   status = "완료"; }
+          else if (step.conclusion === "skipped") { cls = "skip"; status = "건너뜀"; }
+          else { cls = "bad"; status = "실패"; }
+        }
+        result.push({ id: step.name, title: label, cls, status, num: result.length + 1 });
+      });
+      return result.length ? result : null;
+    }
+
+    // ── Quality bars ──────────────────────────────────────────────────────────
+
+    function setQBar(valId, barId, value) {
+      const valEl = document.getElementById(valId);
+      const barEl = document.getElementById(barId);
+      if (!valEl || !barEl) return;
+      if (value === null || value === undefined) { valEl.textContent = "-"; barEl.style.width = "0%"; barEl.className = "q-bar"; return; }
+      const pct = Math.min(100, Math.max(0, Number(value)));
+      valEl.textContent = value;
+      barEl.style.width = pct + "%";
+      barEl.className = "q-bar " + (pct >= 80 ? "good" : pct >= 50 ? "warn" : "bad");
+    }
+    function resetQuality() {
+      setQBar("qTotal", "qBarTotal", null);
+      setQBar("qSentence", "qBarSentence", null);
+      setQBar("qRequired", "qBarRequired", null);
+      document.getElementById("qDetails").textContent = "세부: -";
+    }
+    function setQuality(q) {
+      if (!q) { resetQuality(); return; }
+      setQBar("qTotal",    "qBarTotal",    q.total          ?? null);
+      setQBar("qSentence", "qBarSentence", q.sentence_score ?? null);
+      setQBar("qRequired", "qBarRequired", q.required_score ?? null);
+      document.getElementById("qDetails").textContent = "세부: " + (q.details || []).join(" | ");
+    }
+
+    // ── Download links ────────────────────────────────────────────────────────
+
+    function setDownloadLinks(runNumber, owner, repo) {
+      const base = `https://${owner}.github.io/${repo}`;
+      const files = {
+        dlHwpx: `${base}/results/irb-${runNumber}.hwpx`,
+        dlMd:   `${base}/results/irb-${runNumber}.md`,
+        dlJson: `${base}/results/irb-${runNumber}.json`,
       };
+      Object.entries(files).forEach(([id, url]) => {
+        const el = document.getElementById(id);
+        el.href = url;
+        el.removeAttribute("aria-disabled");
+        el.download = url.split("/").pop();
+      });
+      document.getElementById("dlNote").textContent = "✓ Pages 배포 완료 — 클릭하여 다운로드";
     }
 
-    async function dispatchWorkflow(cfg, inputs) {
-      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/actions/workflows/${cfg.workflow}/dispatches`;
+    function disableDownloadLinks() {
+      ["dlHwpx", "dlMd", "dlJson"].forEach(id => {
+        const el = document.getElementById(id);
+        el.removeAttribute("href");
+        el.setAttribute("aria-disabled", "true");
+      });
+      document.getElementById("dlNote").textContent = "실행 완료 후 GitHub Pages 배포(1~2분)가 끝나면 활성화됩니다.";
+    }
+
+    // ── History ───────────────────────────────────────────────────────────────
+
+    async function loadHistory() {
+      try {
+        const res = await fetch(`./results/history.json?t=${Date.now()}`);
+        if (!res.ok) { $history.textContent = "이력 없음"; return; }
+        const items = await res.json();
+        $history.innerHTML = "";
+        if (!items.length) { $history.textContent = "실행 이력이 없습니다."; return; }
+        items.forEach(it => {
+          const q = it.quality || {};
+          const el = document.createElement("div");
+          el.className = `history-item ${q.total >= 1 ? "ok" : "ok"}`;
+          el.innerHTML = `
+            <div class="hi-header">
+              <span class="hi-badge b-ok">완료</span>
+              <span class="hi-time">${(it.timestamp || "-").replace("T", " ").slice(0, 16)}</span>
+            </div>
+            <div class="hi-topic">${it.topic || "-"}</div>
+            <div class="hi-meta">Run #${it.run_number || "-"} · ${it.model || "-"}</div>
+            <div class="hi-quality">품질 ${q.total ?? "-"} · 문장 ${q.sentence_score ?? "-"} · 필수 ${q.required_score ?? "-"}</div>`;
+          $history.appendChild(el);
+        });
+      } catch(e) {
+        $history.textContent = "이력 로드 실패 (첫 실행 전에는 정상입니다)";
+      }
+    }
+
+    // ── GitHub API calls ──────────────────────────────────────────────────────
+
+    async function dispatchWorkflow(c, inp) {
+      const url = `https://api.github.com/repos/${c.owner}/${c.repo}/actions/workflows/${c.workflow}/dispatches`;
       const res = await fetch(url, {
         method: "POST",
-        headers: headers(cfg.token),
-        body: JSON.stringify({ ref: cfg.ref, inputs })
+        headers: ghHeaders(c.token),
+        body: JSON.stringify({ ref: c.ref, inputs: inp }),
       });
       if (!res.ok) {
         const t = await res.text();
@@ -349,130 +603,232 @@
       }
     }
 
-    async function findLatestRun(cfg, sinceIso) {
-      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/actions/runs?event=workflow_dispatch&per_page=20`;
-      const res = await fetch(url, { headers: headers(cfg.token) });
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(`run 조회 실패 (${res.status}): ${t}`);
-      }
+    async function findLatestRun(c, sinceIso) {
+      const url = `https://api.github.com/repos/${c.owner}/${c.repo}/actions/runs?event=workflow_dispatch&per_page=20`;
+      const res = await fetch(url, { headers: ghHeaders(c.token) });
+      if (!res.ok) throw new Error(`run 조회 실패 (${res.status})`);
       const data = await res.json();
       const runs = (data.workflow_runs || [])
-        .filter(r => String(r.path || "").startsWith(`.github/workflows/${cfg.workflow}`))
-        .filter(r => new Date(r.created_at).getTime() >= new Date(sinceIso).getTime() - 60 * 1000)
+        .filter(r => String(r.path || "").includes(c.workflow))
+        .filter(r => new Date(r.created_at).getTime() >= new Date(sinceIso).getTime() - 60000)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       return runs[0] || null;
     }
 
-    async function fetchArtifacts(cfg, runId) {
-      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/actions/runs/${runId}/artifacts`;
-      const res = await fetch(url, { headers: headers(cfg.token) });
-      if (!res.ok) return [];
+    async function fetchJobs(c, runId) {
+      const url = `https://api.github.com/repos/${c.owner}/${c.repo}/actions/runs/${runId}/jobs`;
+      const res = await fetch(url, { headers: ghHeaders(c.token) });
+      if (!res.ok) return null;
       const data = await res.json();
-      return data.artifacts || [];
+      return data.jobs || [];
+    }
+
+    // ── Poll for Pages results (after workflow completes) ─────────────────────
+
+    async function pollPagesResult(runNumber, owner, repo, maxAttempts = 20) {
+      const url = `https://${owner}.github.io/${repo}/results/run-${runNumber}.json`;
+      for (let i = 0; i < maxAttempts; i++) {
+        await new Promise(r => setTimeout(r, 30000));
+        try {
+          const res = await fetch(`${url}?t=${Date.now()}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.quality) {
+              setQuality(data.quality);
+              setDownloadLinks(runNumber, owner, repo);
+              await loadHistory();
+              return;
+            }
+          }
+        } catch {}
+        setStatus("ok", `실행 완료. Pages 배포 대기 중... (${i+1}/${maxAttempts})`);
+      }
+      setStatus("ok", "실행 완료. 잠시 후 페이지를 새로고침하여 결과를 확인하세요.");
     }
 
     // ── Main run ──────────────────────────────────────────────────────────────
 
     async function run() {
-      const cfg = {
-        owner:    $("owner").value.trim(),
-        repo:     $("repo").value.trim(),
-        ref:      $("ref").value.trim(),
-        workflow: $("workflow").value.trim(),
-        token:    $("token").value.trim(),
-      };
-      const inputs = {
-        topic:           $("topic").value.trim(),
-        method:          $("method").value.trim(),
-        institution:     $("institution").value.trim(),
-        department:      $("department").value.trim(),
-        sample_size:     String($("sample_size").value || "").trim(),
-        duration_months: String($("duration_months").value || "").trim(),
-        model:           $("model").value.trim(),
-      };
+      if (running) return;
+
+      const c = cfg();
+      const inp = inputs();
 
       // Validate
-      const missingCfg = ["token","owner","repo","ref","workflow"].filter(k => !cfg[k]);
-      if (missingCfg.length) {
-        if (cfg.token === "") $("token").classList.add("invalid");
-        setStatus("bad", `GitHub 설정 누락: ${missingCfg.join(", ")}`);
-        return;
-      }
-      if (!inputs.topic)  { $("topic").classList.add("invalid");  setStatus("bad", "연구 주제를 입력하세요."); return; }
-      if (!inputs.method) { $("method").classList.add("invalid"); setStatus("bad", "연구 방법을 입력하세요."); return; }
+      if (!c.token) { document.getElementById("token").classList.add("invalid"); setStatus("bad", "GitHub PAT를 입력하세요."); return; }
+      if (!inp.topic)  { document.getElementById("topic").classList.add("invalid");  setStatus("bad", "연구 주제를 입력하세요."); return; }
+      if (!inp.method) { document.getElementById("method").classList.add("invalid"); setStatus("bad", "연구 방법을 입력하세요."); return; }
+      if (!c.owner || !c.repo || !c.ref || !c.workflow) { setStatus("bad", "GitHub 연결 정보를 확인하세요."); return; }
 
       setRunning(true);
-      const started = new Date().toISOString();
-      const runPage = `https://github.com/${cfg.owner}/${cfg.repo}/actions/workflows/${cfg.workflow}`;
-      setLinks(`워크플로우 페이지: ${runPage}`);
+      resetPipeline();
+      resetQuality();
+      disableDownloadLinks();
+      setMode("실행중", "running");
       setStatus("warn", "워크플로우 실행 요청 중...");
+      $runLink.textContent = "Actions 실행 링크: 요청 중...";
+
+      const started = new Date().toISOString();
 
       try {
-        try {
-          await dispatchWorkflow(cfg, inputs);
-          setStatus("warn", "실행 요청 완료. run 생성 대기 중...");
-        } catch (e) {
-          setStatus("bad", String(e.message || e));
-          return;
-        }
+        await dispatchWorkflow(c, inp);
+        setStatus("warn", "요청 완료. run 생성 대기 중...");
 
+        // Find the run
         let runInfo = null;
         for (let i = 0; i < 30; i++) {
-          try {
-            runInfo = await findLatestRun(cfg, started);
-            if (runInfo) break;
-          } catch (e) {
-            setStatus("bad", String(e.message || e));
-            return;
-          }
           await new Promise(r => setTimeout(r, 2000));
+          runInfo = await findLatestRun(c, started);
+          if (runInfo) break;
         }
+        if (!runInfo) { throw new Error("run 정보를 찾을 수 없습니다. Actions 탭에서 수동 확인하세요."); }
 
-        if (!runInfo) {
-          setStatus("bad", "run 정보를 찾지 못했습니다. Actions 탭에서 수동 확인하세요.");
-          return;
-        }
+        $runLink.innerHTML = `Actions: <a href="${runInfo.html_url}" target="_blank" rel="noopener">#${runInfo.run_number} 보기 →</a>`;
+        currentRunNumber = runInfo.run_number;
 
-        setLinks(`실행 링크: ${runInfo.html_url}`);
-        setStatus("warn", `실행 시작됨 (run #${runInfo.run_number}). 상태 폴링 중...`);
+        setStatus("warn", `Run #${runInfo.run_number} 실행 중. 단계 폴링 중...`);
 
+        // Poll until complete
         while (true) {
-          await new Promise(r => setTimeout(r, 4000));
-          try {
-            const latest = await findLatestRun(cfg, started);
-            if (latest) runInfo = latest;
-          } catch {}
-
-          if (runInfo && runInfo.status === "completed") {
-            if (runInfo.conclusion === "success") {
-              const artifacts = await fetchArtifacts(cfg, runInfo.id);
-              const alive = artifacts.filter(a => !a.expired);
-              const artifactNames = alive.length ? alive.map(a => a.name).join(", ") : "없음";
-              setStatus("ok", `완료: 성공\nArtifacts: ${artifactNames}`);
-              setLinks(`실행 링크: ${runInfo.html_url}\nArtifacts는 해당 run 페이지 우측에서 다운로드하세요.`);
-            } else {
-              setStatus("bad", `완료: 실패 (${runInfo.conclusion || "unknown"})\n${runInfo.html_url}`);
-            }
-            return;
+          await new Promise(r => setTimeout(r, 5000));
+          const jobs = await fetchJobs(c, runInfo.id);
+          if (jobs) {
+            const steps = stepsFromJobs(jobs);
+            if (steps) renderPipeline(steps);
           }
-
-          const phase = runInfo ? `${runInfo.status} (${runInfo.name || "workflow"})` : "pending";
-          setStatus("warn", `실행 중... ${phase}`);
+          // Refresh run status
+          const latest = await findLatestRun(c, started);
+          if (latest) runInfo = latest;
+          if (runInfo.status === "completed") break;
         }
+
+        // Show result
+        if (runInfo.conclusion === "success") {
+          setMode("완료", "success");
+          setStatus("ok", `Run #${runInfo.run_number} 완료! GitHub Pages 배포 중 (1~2분 소요)...`);
+          // Refresh final job steps
+          const jobs = await fetchJobs(c, runInfo.id);
+          if (jobs) { const steps = stepsFromJobs(jobs); if (steps) renderPipeline(steps); }
+          // Poll Pages for results
+          pollPagesResult(runInfo.run_number, c.owner, c.repo);
+        } else {
+          setMode("실패", "fail");
+          setStatus("bad", `Run #${runInfo.run_number} 실패 (${runInfo.conclusion}). Actions 탭을 확인하세요.`);
+          const jobs = await fetchJobs(c, runInfo.id);
+          if (jobs) { const steps = stepsFromJobs(jobs); if (steps) renderPipeline(steps); }
+        }
+
+      } catch(e) {
+        setMode("실패", "fail");
+        setStatus("bad", `실행 오류: ${e.message}`);
       } finally {
         setRunning(false);
+        await loadHistory();
       }
     }
 
+    // ── Form helpers ──────────────────────────────────────────────────────────
+
+    function updateCharCount(inputId, countId) {
+      const el = document.getElementById(inputId);
+      const c  = document.getElementById(countId);
+      if (el && c) c.textContent = el.value.length + "자";
+    }
+
+    function fillExample() {
+      document.getElementById("topic").value  = "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향";
+      document.getElementById("method").value = "10차시 수업, 문제해결력 사전-사후 검사";
+      document.getElementById("study_start").value  = "2026-01-01";
+      document.getElementById("study_end").value    = "2026-06-30";
+      document.getElementById("target_type").value  = "교사";
+      document.getElementById("sample_size").value  = "50";
+      document.getElementById("study_design").value = "양적";
+      document.getElementById("consent_method").value = "서면 동의";
+      document.getElementById("data_tools").value = "설문지";
+      document.getElementById("risk_level").value = "최소위험";
+      updateCharCount("topic", "topic_count");
+      updateCharCount("method", "method_count");
+      setStatus("ok", "예시값을 적용했습니다.");
+    }
+
+    function clearForm() {
+      ["topic", "method", "study_start", "study_end", "target_type", "data_tools"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("sample_size").value = "50";
+      ["study_design", "consent_method", "risk_level"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      updateCharCount("topic", "topic_count");
+      updateCharCount("method", "method_count");
+      setStatus("warn", "입력값을 초기화했습니다.");
+    }
+
+    // ── Date auto-fill ────────────────────────────────────────────────────────
+
+    document.getElementById("study_start").addEventListener("change", function() {
+      const endEl = document.getElementById("study_end");
+      if (!endEl.value && this.value) {
+        const d = new Date(this.value);
+        d.setMonth(d.getMonth() + 6);
+        endEl.value = d.toISOString().split("T")[0];
+      }
+    });
+
+    // ── Char counters ─────────────────────────────────────────────────────────
+
+    document.getElementById("topic").addEventListener("input",  () => updateCharCount("topic",  "topic_count"));
+    document.getElementById("method").addEventListener("input", () => updateCharCount("method", "method_count"));
+
+    // ── Real-time validation clear ────────────────────────────────────────────
+
+    ["token", "topic", "method"].forEach(id => {
+      document.getElementById(id).addEventListener("input", function() {
+        if (this.value.trim()) this.classList.remove("invalid");
+      });
+    });
+
+    // ── PAT toggle ────────────────────────────────────────────────────────────
+
+    document.getElementById("tokenToggle").addEventListener("click", function() {
+      const el = document.getElementById("token");
+      if (el.type === "password") { el.type = "text";     this.textContent = "숨기기"; }
+      else                        { el.type = "password"; this.textContent = "보기"; }
+    });
+
+    // ── Session storage for config ────────────────────────────────────────────
+
+    function saveConfig() {
+      const c = cfg();
+      sessionStorage.setItem("irb_cfg", JSON.stringify(c));
+    }
+    function loadConfig() {
+      try {
+        const c = JSON.parse(sessionStorage.getItem("irb_cfg") || "{}");
+        if (c.owner)    document.getElementById("owner").value    = c.owner;
+        if (c.repo)     document.getElementById("repo").value     = c.repo;
+        if (c.ref)      document.getElementById("ref").value      = c.ref;
+        if (c.workflow) document.getElementById("workflow").value = c.workflow;
+        // Do NOT restore token for security
+      } catch {}
+    }
+    ["owner","repo","ref","workflow"].forEach(id => {
+      document.getElementById(id).addEventListener("change", saveConfig);
+    });
+
     // ── Event listeners ───────────────────────────────────────────────────────
 
-    $("runBtn").addEventListener("click", run);
-    $("fillBtn").addEventListener("click", fillRequestedExample);
+    document.getElementById("runBtn").addEventListener("click", run);
+    document.getElementById("exampleBtn").addEventListener("click", fillExample);
+    document.getElementById("clearBtn").addEventListener("click", clearForm);
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    updateCharCount("topic",  "topic_count");
-    updateCharCount("method", "method_count");
+
+    loadConfig();
+    resetPipeline();
+    setMode("대기");
+    resetQuality();
+    loadHistory();
   </script>
 </body>
 </html>

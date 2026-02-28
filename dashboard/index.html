@@ -429,6 +429,7 @@
           <button class="ghost sm" id="exampleBtn">예시 채우기</button>
           <button class="ghost sm" id="reloadBtn">다시 불러오기</button>
           <button class="ghost sm" id="quickTemplateBtn">요청서 저장</button>
+          <button class="ghost sm" id="obsidianBtn">옵시디언으로 보내기</button>
           <button class="ghost sm danger" id="clearBtn">초기화</button>
         </div>
 
@@ -820,11 +821,28 @@
       }
     }
 
+    async function sendToObsidian() {
+      if (state.running) {
+        setStatus("warn", "실행 중에는 복사할 수 없습니다. 완료 후 다시 시도하세요.");
+        return;
+      }
+      setStatus("warn", "옵시디언 폴더로 복사 중...");
+      try {
+        const res = await fetch("/api/send-obsidian", { method: "POST" });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || "복사 실패");
+        setStatus("good", `복사 완료: ${data.target}`);
+      } catch (e) {
+        setStatus("bad", `옵시디언 복사 실패: ${e.message}`);
+      }
+    }
+
     // ── Event listeners ───────────────────────────────────────────────────────
 
     document.getElementById("reloadBtn").addEventListener("click", loadInput);
     document.getElementById("saveBtn").addEventListener("click", saveInput);
     document.getElementById("runBtn").addEventListener("click", runAgents);
+    document.getElementById("obsidianBtn").addEventListener("click", sendToObsidian);
     document.getElementById("quickTemplateBtn").addEventListener("click", fillAndSaveRequestedTemplate);
     document.getElementById("exampleBtn").addEventListener("click", fillExample);
     document.getElementById("clearBtn").addEventListener("click", () => { clearForm(); setStatus("warn", "입력값을 초기화했습니다."); });

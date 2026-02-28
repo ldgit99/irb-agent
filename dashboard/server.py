@@ -21,6 +21,8 @@ DASHBOARD_DIR = ROOT / "dashboard"
 INPUT_PATH = ROOT / "input" / "input-form.md"
 OUTPUT_DIR = ROOT / "output"
 HISTORY_PATH = OUTPUT_DIR / "run_history.jsonl"
+OBSIDIAN_VAULT_DIR = Path(os.getenv("IRB_OBSIDIAN_VAULT", r"D:\OneDrive\Documents\Obsidian Vault"))
+OBSIDIAN_SUBDIR = "IRB"
 ALLOW_UI_API_KEY = os.getenv("IRB_DASHBOARD_ALLOW_UI_API_KEY", "0").strip() == "1"
 RUNS: dict[str, dict] = {}
 RUNS_LOCK = threading.Lock()
@@ -228,6 +230,30 @@ def append_history(entry: dict) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     with HISTORY_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def copy_latest_md_to_obsidian() -> dict:
+    source = OUTPUT_DIR / "irb_from_input_final.md"
+    if not source.exists():
+        fallback = OUTPUT_DIR / "irb_from_input.md"
+        if fallback.exists():
+            source = fallback
+        else:
+            candidates = sorted(OUTPUT_DIR.glob("irb-*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
+            if candidates:
+                source = candidates[0]
+            else:
+                raise FileNotFoundError("복사할 Markdown 파일이 없습니다. 먼저 에이전트를 실행하세요.")
+
+    target_dir = OBSIDIAN_VAULT_DIR / OBSIDIAN_SUBDIR
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / "irb_from_input_final.md"
+    shutil.copyfile(source, target)
+    return {
+        "source": str(source),
+        "target": str(target),
+        "size": target.stat().st_size,
+    }
 
 
 def load_history(limit: int = 20) -> list[dict]:
@@ -524,6 +550,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
+        if path == "/api/send-obsidian":
+            try:
+                copied = copy_latest_md_to_obsidian()
+                self._json({"ok": True, **copied})
+            except Exception as e:
+                self._json({"ok": False, "error": f"옵시디언 복사 실패: {e}"}, code=500)
+            return
+
         if path == "/api/run":
             try:
                 length = int(self.headers.get("Content-Length", "0"))

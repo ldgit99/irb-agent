@@ -161,6 +161,7 @@
           <button class="primary" id="saveBtn">input-form.md 저장</button>
           <button class="success" id="runBtn">에이전트 실행</button>
           <button class="ghost" id="reloadBtn">다시 불러오기</button>
+          <button class="ghost" id="quickTemplateBtn">요청 양식 채우고 저장</button>
           <button class="ghost" id="exampleBtn">예시 채우기</button>
           <button class="ghost" id="clearBtn">입력 초기화</button>
           <a class="btn-link ghost" href="/api/download/hwpx">IRB 신청서 다운받기</a>
@@ -216,24 +217,31 @@
     function clearForm(){ fields.forEach(id=>{ document.getElementById(id).value = ""; }); }
     function fillExample(){
       setForm({
-        research_topic: "생성형 AI 기반 피드백이 고등학생의 학습몰입에 미치는 영향",
-        research_method: "사전-사후 설문과 학습일지 분석을 포함한 혼합연구",
-        study_start: "2026-03-01",
-        study_end: "2026-08-31",
-        target_type: "고등학생",
-        target_count: "80",
-        study_design: "혼합연구",
-        consent_method: "서면+전자 동의",
-        data_tools: "설문지, 학습일지, 반구조화 면담",
+        research_topic: "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향",
+        research_method: "10차시 수업, 문제해결력 사전-사후 검사",
+        study_start: "2026-01-01",
+        study_end: "2026-06-30",
+        target_type: "교사",
+        target_count: "50",
+        study_design: "양적",
+        consent_method: "서면 동의",
+        data_tools: "설문지",
         risk_level: "최소위험",
         institution: "경북대학교",
-        department: "사범대학",
+        department: "사범대학 정보컴퓨터교육과",
         sensitive_data: "아니오",
         face_to_face: "예",
         pi_name: "이동국",
         pi_phone: "053-950-5845",
       });
       setStatus("good", "예시 입력값을 채웠습니다.");
+    }
+    async function fillAndSaveRequestedTemplate(){
+      fillExample();
+      const ok = await saveInput();
+      if(ok){
+        setStatus("good", "요청 양식을 채우고 input-form.md 파일로 저장했습니다.");
+      }
     }
     function setMode(mode){ const m=(mode||"대기"); $modeChip.textContent=`실행 모드: ${m}`; $modeChip.className=`mode-chip ${String(mode).toLowerCase()==="api"?"api":""}`; }
     function resetQuality(){ document.getElementById("qTotal").textContent="-"; document.getElementById("qSentence").textContent="-"; document.getElementById("qRequired").textContent="-"; document.getElementById("qDetails").textContent="품질 세부: -"; }
@@ -370,6 +378,7 @@
     document.getElementById("reloadBtn").addEventListener("click", loadInput);
     document.getElementById("saveBtn").addEventListener("click", saveInput);
     document.getElementById("runBtn").addEventListener("click", runAgents);
+    document.getElementById("quickTemplateBtn").addEventListener("click", fillAndSaveRequestedTemplate);
     document.getElementById("exampleBtn").addEventListener("click", fillExample);
     document.getElementById("clearBtn").addEventListener("click", () => { clearForm(); setStatus("warn", "입력값을 초기화했습니다."); });
 

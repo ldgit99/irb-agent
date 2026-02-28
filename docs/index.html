@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IRB Generator (GitHub Actions)</title>
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --ink: #14233a;
+      --muted: #5f6f88;
+      --line: #d7dfeb;
+      --card: #ffffff;
+      --accent: #1457d9;
+      --ok: #198754;
+      --warn: #b56b00;
+      --bad: #c73a45;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #f7faff 0%, #f2f6ff 100%);
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 20px; }
+    h1 { margin: 0; font-size: 28px; }
+    .sub { margin: 8px 0 14px; color: var(--muted); font-size: 13px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 20px rgba(24, 48, 89, 0.06);
+    }
+    .title { margin: 0 0 10px; font-size: 16px; }
+    .hint { margin: 0 0 10px; font-size: 12px; color: var(--muted); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { margin-bottom: 10px; }
+    label { display: block; margin-bottom: 4px; font-size: 12px; color: var(--muted); }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 14px;
+      background: #fff;
+      color: var(--ink);
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    .required { color: var(--bad); font-weight: 700; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .primary { background: var(--accent); color: #fff; }
+    .ghost { background: #e9f0ff; color: #1c4da1; }
+    .status {
+      margin-top: 10px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      background: #fff;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .status.ok { color: var(--ok); border-color: rgba(25, 135, 84, .35); }
+    .status.warn { color: var(--warn); border-color: rgba(181, 107, 0, .35); }
+    .status.bad { color: var(--bad); border-color: rgba(199, 58, 69, .35); }
+    .mono { font-family: Consolas, monospace; font-size: 12px; }
+    @media (max-width: 860px) { .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>IRB 자동생성 (GitHub Actions)</h1>
+    <p class="sub">GitHub Pages에서 실행되는 정적 UI입니다. 입력값으로 Actions 워크플로우를 호출해 IRB 초안을 생성합니다.</p>
+
+    <section class="card">
+      <h2 class="title">1) GitHub 연결</h2>
+      <p class="hint">PAT 필요 권한(권장): 저장소 접근 + Actions 실행/조회 권한. 토큰은 브라우저 메모리에서만 사용됩니다.</p>
+      <div class="row">
+        <div class="field"><label>Owner</label><input id="owner" value="ldgit99" /></div>
+        <div class="field"><label>Repository</label><input id="repo" value="irb-agent" /></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Branch(ref)</label><input id="ref" value="main" /></div>
+        <div class="field"><label>Workflow file</label><input id="workflow" value="generate-irb.yml" /></div>
+      </div>
+      <div class="field"><label>GitHub Personal Access Token <span class="required">*</span></label><input id="token" type="password" placeholder="ghp_..." /></div>
+    </section>
+
+    <section class="card">
+      <h2 class="title">2) IRB 입력 양식</h2>
+      <div class="field"><label>연구 주제 <span class="required">*</span></label><textarea id="topic">바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향</textarea></div>
+      <div class="field"><label>연구 방법 <span class="required">*</span></label><textarea id="method">10차시 수업, 문제해결력 사전-사후 검사</textarea></div>
+      <div class="row">
+        <div class="field"><label>수행기관</label><input id="institution" value="경북대학교" /></div>
+        <div class="field"><label>소속</label><input id="department" value="사범대학 정보컴퓨터교육과" /></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>표본 수</label><input id="sample_size" type="number" min="1" value="50" /></div>
+        <div class="field"><label>연구기간(개월)</label><input id="duration_months" type="number" min="1" value="6" /></div>
+      </div>
+      <div class="field"><label>모델</label><input id="model" value="gpt-4.1-mini" /></div>
+      <div class="actions">
+        <button class="primary" id="runBtn">워크플로우 실행</button>
+        <button class="ghost" id="fillBtn">요청 예시 채우기</button>
+      </div>
+      <div id="status" class="status">준비됨</div>
+      <div id="links" class="status mono">실행 링크: -</div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const setStatus = (cls, msg) => {
+      const el = $("status");
+      el.className = `status ${cls || ""}`.trim();
+      el.textContent = msg;
+    };
+    const setLinks = (msg) => { $("links").textContent = msg; };
+
+    function fillRequestedExample() {
+      $("topic").value = "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향";
+      $("method").value = "10차시 수업, 문제해결력 사전-사후 검사";
+      $("institution").value = "경북대학교";
+      $("department").value = "사범대학 정보컴퓨터교육과";
+      $("sample_size").value = "50";
+      $("duration_months").value = "6";
+      $("model").value = "gpt-4.1-mini";
+      setStatus("ok", "요청 예시값을 적용했습니다.");
+    }
+
+    function headers(token) {
+      return {
+        "Accept": "application/vnd.github+json",
+        "Authorization": `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json"
+      };
+    }
+
+    async function dispatchWorkflow(cfg, inputs) {
+      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/actions/workflows/${cfg.workflow}/dispatches`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: headers(cfg.token),
+        body: JSON.stringify({ ref: cfg.ref, inputs })
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(`dispatch 실패 (${res.status}): ${t}`);
+      }
+    }
+
+    async function findLatestRun(cfg, sinceIso) {
+      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/actions/runs?event=workflow_dispatch&per_page=20`;
+      const res = await fetch(url, { headers: headers(cfg.token) });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(`run 조회 실패 (${res.status}): ${t}`);
+      }
+      const data = await res.json();
+      const runs = (data.workflow_runs || [])
+        .filter(r => String(r.path || "").startsWith(`.github/workflows/${cfg.workflow}`))
+        .filter(r => new Date(r.created_at).getTime() >= new Date(sinceIso).getTime() - 60 * 1000)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      return runs[0] || null;
+    }
+
+    async function fetchArtifacts(cfg, runId) {
+      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/actions/runs/${runId}/artifacts`;
+      const res = await fetch(url, { headers: headers(cfg.token) });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.artifacts || [];
+    }
+
+    async function run() {
+      const cfg = {
+        owner: $("owner").value.trim(),
+        repo: $("repo").value.trim(),
+        ref: $("ref").value.trim(),
+        workflow: $("workflow").value.trim(),
+        token: $("token").value.trim(),
+      };
+      const inputs = {
+        topic: $("topic").value.trim(),
+        method: $("method").value.trim(),
+        institution: $("institution").value.trim(),
+        department: $("department").value.trim(),
+        sample_size: String($("sample_size").value || "").trim(),
+        duration_months: String($("duration_months").value || "").trim(),
+        model: $("model").value.trim(),
+      };
+
+      const required = ["token", "owner", "repo", "ref", "workflow"];
+      const missingCfg = required.filter(k => !cfg[k]);
+      if (missingCfg.length) {
+        setStatus("bad", `GitHub 설정 누락: ${missingCfg.join(", ")}`);
+        return;
+      }
+      if (!inputs.topic || !inputs.method) {
+        setStatus("bad", "필수 입력(연구 주제, 연구 방법)을 확인하세요.");
+        return;
+      }
+
+      const started = new Date().toISOString();
+      const runPage = `https://github.com/${cfg.owner}/${cfg.repo}/actions/workflows/${cfg.workflow}`;
+      setLinks(`워크플로우 페이지: ${runPage}`);
+      setStatus("warn", "워크플로우 실행 요청 중...");
+
+      try {
+        await dispatchWorkflow(cfg, inputs);
+        setStatus("warn", "실행 요청 완료. run 생성 대기 중...");
+      } catch (e) {
+        setStatus("bad", String(e.message || e));
+        return;
+      }
+
+      let runInfo = null;
+      for (let i = 0; i < 30; i++) {
+        try {
+          runInfo = await findLatestRun(cfg, started);
+          if (runInfo) break;
+        } catch (e) {
+          setStatus("bad", String(e.message || e));
+          return;
+        }
+        await new Promise(r => setTimeout(r, 2000));
+      }
+
+      if (!runInfo) {
+        setStatus("bad", "run 정보를 찾지 못했습니다. Actions 탭에서 수동 확인하세요.");
+        return;
+      }
+
+      setLinks(`실행 링크: ${runInfo.html_url}`);
+      setStatus("warn", `실행 시작됨 (run #${runInfo.run_number}). 상태 폴링 중...`);
+
+      while (true) {
+        await new Promise(r => setTimeout(r, 4000));
+        try {
+          const latest = await findLatestRun(cfg, started);
+          if (latest) runInfo = latest;
+        } catch {}
+
+        if (runInfo && runInfo.status === "completed") {
+          if (runInfo.conclusion === "success") {
+            const artifacts = await fetchArtifacts(cfg, runInfo.id);
+            const alive = artifacts.filter(a => !a.expired);
+            const artifactNames = alive.length ? alive.map(a => a.name).join(", ") : "없음";
+            setStatus("ok", `완료: 성공\nArtifacts: ${artifactNames}`);
+            setLinks(`실행 링크: ${runInfo.html_url}\nArtifacts는 해당 run 페이지 우측에서 다운로드하세요.`);
+          } else {
+            setStatus("bad", `완료: 실패 (${runInfo.conclusion || "unknown"})\n${runInfo.html_url}`);
+          }
+          return;
+        }
+
+        const phase = runInfo ? `${runInfo.status} (${runInfo.name || "workflow"})` : "pending";
+        setStatus("warn", `실행 중... ${phase}`);
+      }
+    }
+
+    $("runBtn").addEventListener("click", run);
+    $("fillBtn").addEventListener("click", fillRequestedExample);
+  </script>
+</body>
+</html>

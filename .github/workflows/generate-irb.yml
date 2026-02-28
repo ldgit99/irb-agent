@@ -1,0 +1,76 @@
+name: Generate IRB Draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "연구 주제"
+        required: true
+        default: "생성형 AI 기반 수업이 학습 몰입에 미치는 영향"
+      method:
+        description: "연구 방법"
+        required: true
+        default: "사전-사후 설문 및 인터뷰를 포함한 혼합연구"
+      institution:
+        description: "수행기관"
+        required: true
+        default: "경북대학교"
+      department:
+        description: "소속"
+        required: true
+        default: "사범대학 정보컴퓨터교육과"
+      sample_size:
+        description: "표본 수"
+        required: true
+        default: "50"
+      duration_months:
+        description: "연구기간(개월)"
+        required: true
+        default: "6"
+      model:
+        description: "OpenAI 모델"
+        required: true
+        default: "gpt-4.1-mini"
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate secret
+        shell: bash
+        run: |
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "OPENAI_API_KEY secret is missing."
+            exit 1
+          fi
+
+      - name: Generate IRB draft
+        run: |
+          python irb_agent.py \
+            --topic "${{ github.event.inputs.topic }}" \
+            --method "${{ github.event.inputs.method }}" \
+            --institution "${{ github.event.inputs.institution }}" \
+            --department "${{ github.event.inputs.department }}" \
+            --sample-size "${{ github.event.inputs.sample_size }}" \
+            --duration-months "${{ github.event.inputs.duration_months }}" \
+            --model "${{ github.event.inputs.model }}" \
+            --output-dir output
+
+      - name: Upload outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: irb-output-${{ github.run_number }}
+          path: |
+            output/*.json
+            output/*.md
+            output/*.hwpx

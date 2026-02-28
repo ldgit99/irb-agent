@@ -40,6 +40,8 @@
     }
     .panel { padding: 14px; }
     h2 { margin: 0 0 10px; font-size: 16px; }
+    .hint { margin: 0 0 10px; font-size: 12px; color: var(--muted); }
+    .required-mark { color: #c93440; font-weight: 700; }
     .section-title {
       margin: 12px 0 8px;
       font-size: 13px;
@@ -114,16 +116,17 @@
     <div class="layout">
       <section class="card panel">
         <h2>입력 편집</h2>
+        <p class="hint">IRB 보고서 생성을 위한 기본 정보를 입력하세요. <span class="required-mark">*</span> 표시는 필수 항목입니다.</p>
         <div class="section-title">필수 입력</div>
-        <div class="field"><label>연구 주제</label><textarea id="research_topic"></textarea></div>
-        <div class="field"><label>연구 방법</label><textarea id="research_method"></textarea></div>
+        <div class="field"><label>연구 주제 <span class="required-mark">*</span></label><textarea id="research_topic" required placeholder="예: 생성형 AI 활용 수업이 학습 몰입에 미치는 영향"></textarea></div>
+        <div class="field"><label>연구 방법 <span class="required-mark">*</span></label><textarea id="research_method" required placeholder="예: 사전-사후 검사, 설문, 인터뷰를 포함한 혼합연구"></textarea></div>
         <div class="row">
-          <div class="field"><label>연구 시작일</label><input id="study_start" type="date" /></div>
-          <div class="field"><label>연구 종료일</label><input id="study_end" type="date" /></div>
+          <div class="field"><label>연구 시작일 <span class="required-mark">*</span></label><input id="study_start" type="date" required /></div>
+          <div class="field"><label>연구 종료일 <span class="required-mark">*</span></label><input id="study_end" type="date" required /></div>
         </div>
         <div class="row">
-          <div class="field"><label>연구 대상 유형</label><input id="target_type" /></div>
-          <div class="field"><label>연구 대상 인원</label><input id="target_count" type="number" min="1" /></div>
+          <div class="field"><label>연구 대상 유형 <span class="required-mark">*</span></label><input id="target_type" required placeholder="예: 고등학교 교사" /></div>
+          <div class="field"><label>연구 대상 인원 <span class="required-mark">*</span></label><input id="target_count" type="number" min="1" required placeholder="예: 50" /></div>
         </div>
 
         <div class="section-title">추천/선택 입력</div>
@@ -132,20 +135,20 @@
           <div class="field"><label>동의 방식</label><select id="consent_method"><option value="">선택</option><option>서면 동의</option><option>전자 동의</option><option>서면+전자 동의</option><option>해당없음</option></select></div>
         </div>
         <div class="row">
-          <div class="field"><label>자료 수집 도구</label><input id="data_tools" /></div>
+          <div class="field"><label>자료 수집 도구</label><input id="data_tools" placeholder="예: 설문지, 관찰일지, 인터뷰 질문지" /></div>
           <div class="field"><label>연구 위험 수준</label><select id="risk_level"><option value="">선택</option><option>최소위험</option><option>최소위험 초과 가능</option></select></div>
         </div>
         <div class="row">
-          <div class="field"><label>수행기관</label><input id="institution" /></div>
-          <div class="field"><label>소속</label><input id="department" /></div>
+          <div class="field"><label>수행기관</label><input id="institution" placeholder="예: 경북대학교" /></div>
+          <div class="field"><label>소속</label><input id="department" placeholder="예: 사범대학 정보컴퓨터교육과" /></div>
         </div>
         <div class="row">
           <div class="field"><label>민감정보 수집 여부</label><select id="sensitive_data"><option>아니오</option><option>예</option></select></div>
           <div class="field"><label>대면 진행 여부</label><select id="face_to_face"><option>예</option><option>아니오</option></select></div>
         </div>
         <div class="row">
-          <div class="field"><label>연구책임자 성명</label><input id="pi_name" /></div>
-          <div class="field"><label>연구책임자 전화번호</label><input id="pi_phone" /></div>
+          <div class="field"><label>연구책임자 성명</label><input id="pi_name" placeholder="예: 홍길동" /></div>
+          <div class="field"><label>연구책임자 전화번호</label><input id="pi_phone" placeholder="예: 010-1234-5678" /></div>
         </div>
 
         <div class="section-title">API 설정</div>
@@ -158,6 +161,8 @@
           <button class="primary" id="saveBtn">input-form.md 저장</button>
           <button class="success" id="runBtn">에이전트 실행</button>
           <button class="ghost" id="reloadBtn">다시 불러오기</button>
+          <button class="ghost" id="exampleBtn">예시 채우기</button>
+          <button class="ghost" id="clearBtn">입력 초기화</button>
           <a class="btn-link ghost" href="/api/download/hwpx">IRB 신청서 다운받기</a>
         </div>
         <div id="status" class="status">준비됨</div>
@@ -208,6 +213,28 @@
     function setStatus(type,msg){ $status.className=`status ${type||""}`.trim(); $status.textContent=msg; }
     function getPayload(){ const p={}; fields.forEach(id=>p[id]=document.getElementById(id).value.trim()); return p; }
     function setForm(data){ fields.forEach(id=>{ if(Object.prototype.hasOwnProperty.call(data,id)){ document.getElementById(id).value = data[id] ?? ""; }}); }
+    function clearForm(){ fields.forEach(id=>{ document.getElementById(id).value = ""; }); }
+    function fillExample(){
+      setForm({
+        research_topic: "생성형 AI 기반 피드백이 고등학생의 학습몰입에 미치는 영향",
+        research_method: "사전-사후 설문과 학습일지 분석을 포함한 혼합연구",
+        study_start: "2026-03-01",
+        study_end: "2026-08-31",
+        target_type: "고등학생",
+        target_count: "80",
+        study_design: "혼합연구",
+        consent_method: "서면+전자 동의",
+        data_tools: "설문지, 학습일지, 반구조화 면담",
+        risk_level: "최소위험",
+        institution: "경북대학교",
+        department: "사범대학",
+        sensitive_data: "아니오",
+        face_to_face: "예",
+        pi_name: "이동국",
+        pi_phone: "053-950-5845",
+      });
+      setStatus("good", "예시 입력값을 채웠습니다.");
+    }
     function setMode(mode){ const m=(mode||"대기"); $modeChip.textContent=`실행 모드: ${m}`; $modeChip.className=`mode-chip ${String(mode).toLowerCase()==="api"?"api":""}`; }
     function resetQuality(){ document.getElementById("qTotal").textContent="-"; document.getElementById("qSentence").textContent="-"; document.getElementById("qRequired").textContent="-"; document.getElementById("qDetails").textContent="품질 세부: -"; }
     function setQuality(q){
@@ -343,6 +370,8 @@
     document.getElementById("reloadBtn").addEventListener("click", loadInput);
     document.getElementById("saveBtn").addEventListener("click", saveInput);
     document.getElementById("runBtn").addEventListener("click", runAgents);
+    document.getElementById("exampleBtn").addEventListener("click", fillExample);
+    document.getElementById("clearBtn").addEventListener("click", () => { clearForm(); setStatus("warn", "입력값을 초기화했습니다."); });
 
     resetPipeline(); setMode("대기"); resetQuality(); loadInput(); loadHistory();
   </script>

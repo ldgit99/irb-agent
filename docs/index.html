@@ -6,138 +6,326 @@
   <title>IRB Generator (GitHub Actions)</title>
   <style>
     :root {
-      --bg: #f6f8fc;
-      --ink: #14233a;
-      --muted: #5f6f88;
-      --line: #d7dfeb;
-      --card: #ffffff;
-      --accent: #1457d9;
-      --ok: #198754;
-      --warn: #b56b00;
-      --bad: #c73a45;
+      --bg-1: #f4f8ff;
+      --bg-2: #e8f0ff;
+      --ink: #10233f;
+      --muted: #4f6687;
+      --line: rgba(16, 35, 63, 0.14);
+      --card: rgba(255, 255, 255, 0.9);
+      --accent: #0b63f6;
+      --good: #158a52;
+      --warn: #c67700;
+      --bad: #c93440;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: "Pretendard", "Noto Sans KR", "Segoe UI", sans-serif;
       color: var(--ink);
-      background: linear-gradient(180deg, #f7faff 0%, #f2f6ff 100%);
+      background:
+        radial-gradient(circle at -5% -10%, #ffffff 0%, transparent 45%),
+        radial-gradient(circle at 105% 0%, #d7e6ff 0%, transparent 40%),
+        linear-gradient(150deg, var(--bg-1), var(--bg-2));
+      min-height: 100vh;
     }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 20px; }
-    h1 { margin: 0; font-size: 28px; }
-    .sub { margin: 8px 0 14px; color: var(--muted); font-size: 13px; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 24px; }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .page-header { margin-bottom: 16px; }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+    .sub { margin-top: 6px; color: var(--muted); font-size: 14px; }
+
+    /* ── Cards ───────────────────────────────────────────────── */
     .card {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 14px;
+      padding: 16px;
       margin-bottom: 12px;
-      box-shadow: 0 6px 20px rgba(24, 48, 89, 0.06);
+      box-shadow: 0 8px 24px rgba(20,45,80,0.08);
     }
-    .title { margin: 0 0 10px; font-size: 16px; }
-    .hint { margin: 0 0 10px; font-size: 12px; color: var(--muted); }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .field { margin-bottom: 10px; }
-    label { display: block; margin-bottom: 4px; font-size: 12px; color: var(--muted); }
+    h2 { margin: 0 0 4px; font-size: 16px; }
+    .hint { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+
+    /* ── Section titles ──────────────────────────────────────── */
+    .section-title {
+      margin: 14px 0 8px;
+      font-size: 11px;
+      color: #1f4f9f;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-left: 3px solid #9bbdff;
+      padding-left: 8px;
+    }
+
+    /* ── Form ────────────────────────────────────────────────── */
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .field { margin-bottom: 8px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
     input, textarea, select {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 10px;
+      padding: 9px 12px;
       font-size: 14px;
       background: #fff;
       color: var(--ink);
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(11,99,246,0.12);
+    }
+    input.invalid, textarea.invalid {
+      border-color: var(--bad);
+      background: #fff8f8;
+    }
+    input.invalid:focus, textarea.invalid:focus {
+      box-shadow: 0 0 0 3px rgba(201,52,64,0.12);
     }
     textarea { min-height: 72px; resize: vertical; }
     .required { color: var(--bad); font-weight: 700; }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+
+    /* ── Char counter ────────────────────────────────────────── */
+    .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 2px; }
+
+    /* ── Password toggle ─────────────────────────────────────── */
+    .pwd-wrap { position: relative; }
+    .pwd-wrap input { padding-right: 54px; }
+    .pwd-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: #ecf3ff;
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1.5;
+    }
+    .pwd-btn:hover { background: #dde9ff; }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
     button {
       border: 0;
       border-radius: 10px;
-      padding: 10px 12px;
+      padding: 10px 14px;
       font-weight: 700;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: inherit;
+      font-size: 14px;
+      transition: opacity 0.15s, transform 0.1s, background 0.15s;
     }
+    button:active:not(:disabled) { transform: scale(0.97); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     .primary { background: var(--accent); color: #fff; }
-    .ghost { background: #e9f0ff; color: #1c4da1; }
+    .primary:hover:not(:disabled) { background: #0953d4; }
+    .ghost { background: #ecf3ff; color: #204c95; }
+    .ghost:hover { background: #dde9ff; }
+
+    /* Actions row */
+    .actions-primary { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .actions-primary .run-btn { flex: 1; justify-content: center; font-size: 15px; padding: 12px; min-width: 180px; }
+
+    /* ── Status bar ──────────────────────────────────────────── */
     .status {
       margin-top: 10px;
       border: 1px dashed var(--line);
       border-radius: 10px;
-      padding: 10px;
+      padding: 9px 12px;
       font-size: 13px;
       color: var(--muted);
       background: #fff;
       white-space: pre-wrap;
       word-break: break-word;
     }
-    .status.ok { color: var(--ok); border-color: rgba(25, 135, 84, .35); }
-    .status.warn { color: var(--warn); border-color: rgba(181, 107, 0, .35); }
-    .status.bad { color: var(--bad); border-color: rgba(199, 58, 69, .35); }
-    .mono { font-family: Consolas, monospace; font-size: 12px; }
-    @media (max-width: 860px) { .row { grid-template-columns: 1fr; } }
+    .status.ok   { color: var(--good); border-color: rgba(21,138,82,.3);  background: #f3fbf6; }
+    .status.warn { color: var(--warn); border-color: rgba(198,119,0,.3);  background: #fffbf3; }
+    .status.bad  { color: var(--bad);  border-color: rgba(201,52,64,.3);   background: #fff5f6; }
+
+    /* ── Links / result area ─────────────────────────────────── */
+    .result-line {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 7px 12px;
+      background: #f8faff;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: "Consolas", "D2Coding", monospace;
+    }
+    .result-line a { color: var(--accent); }
+
+    /* ── Spinner ─────────────────────────────────────────────── */
+    .run-spin { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Mobile ──────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .wrap { padding: 12px; }
+      h1 { font-size: 22px; }
+      .row { grid-template-columns: 1fr; }
+      .actions-primary { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>IRB 자동생성 (GitHub Actions)</h1>
-    <p class="sub">GitHub Pages에서 실행되는 정적 UI입니다. 입력값으로 Actions 워크플로우를 호출해 IRB 초안을 생성합니다.</p>
+    <div class="page-header">
+      <h1>IRB 자동생성</h1>
+      <p class="sub">GitHub Pages에서 실행되는 정적 UI입니다. 입력값으로 Actions 워크플로우를 호출해 IRB 초안을 생성합니다.</p>
+    </div>
 
+    <!-- ── 1) GitHub 연결 ───────────────────────────────────── -->
     <section class="card">
-      <h2 class="title">1) GitHub 연결</h2>
+      <h2>1) GitHub 연결</h2>
       <p class="hint">PAT 필요 권한(권장): 저장소 접근 + Actions 실행/조회 권한. 토큰은 브라우저 메모리에서만 사용됩니다.</p>
+
       <div class="row">
         <div class="field"><label>Owner</label><input id="owner" value="ldgit99" /></div>
         <div class="field"><label>Repository</label><input id="repo" value="irb-agent" /></div>
       </div>
       <div class="row">
-        <div class="field"><label>Branch(ref)</label><input id="ref" value="main" /></div>
+        <div class="field"><label>Branch (ref)</label><input id="ref" value="main" /></div>
         <div class="field"><label>Workflow file</label><input id="workflow" value="generate-irb.yml" /></div>
       </div>
-      <div class="field"><label>GitHub Personal Access Token <span class="required">*</span></label><input id="token" type="password" placeholder="ghp_..." /></div>
+      <div class="field">
+        <label>GitHub Personal Access Token <span class="required">*</span></label>
+        <div class="pwd-wrap">
+          <input id="token" type="password" placeholder="ghp_..." />
+          <button type="button" id="tokenToggle" class="pwd-btn">보기</button>
+        </div>
+      </div>
     </section>
 
+    <!-- ── 2) IRB 입력 양식 ─────────────────────────────────── -->
     <section class="card">
-      <h2 class="title">2) IRB 입력 양식</h2>
-      <div class="field"><label>연구 주제 <span class="required">*</span></label><textarea id="topic">바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향</textarea></div>
-      <div class="field"><label>연구 방법 <span class="required">*</span></label><textarea id="method">10차시 수업, 문제해결력 사전-사후 검사</textarea></div>
+      <h2>2) IRB 입력 양식</h2>
+
+      <div class="field">
+        <label>연구 주제 <span class="required">*</span></label>
+        <textarea id="topic">바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향</textarea>
+        <div class="char-count" id="topic_count">0자</div>
+      </div>
+      <div class="field">
+        <label>연구 방법 <span class="required">*</span></label>
+        <textarea id="method">10차시 수업, 문제해결력 사전-사후 검사</textarea>
+        <div class="char-count" id="method_count">0자</div>
+      </div>
       <div class="row">
         <div class="field"><label>수행기관</label><input id="institution" value="경북대학교" /></div>
         <div class="field"><label>소속</label><input id="department" value="사범대학 정보컴퓨터교육과" /></div>
       </div>
       <div class="row">
         <div class="field"><label>표본 수</label><input id="sample_size" type="number" min="1" value="50" /></div>
-        <div class="field"><label>연구기간(개월)</label><input id="duration_months" type="number" min="1" value="6" /></div>
+        <div class="field"><label>연구기간 (개월)</label><input id="duration_months" type="number" min="1" value="6" /></div>
       </div>
       <div class="field"><label>모델</label><input id="model" value="gpt-4.1-mini" /></div>
-      <div class="actions">
-        <button class="primary" id="runBtn">워크플로우 실행</button>
-        <button class="ghost" id="fillBtn">요청 예시 채우기</button>
+
+      <!-- Actions -->
+      <div class="actions-primary">
+        <button class="primary run-btn" id="runBtn">▶ 워크플로우 실행</button>
+        <button class="ghost" id="fillBtn">예시 채우기</button>
       </div>
+
       <div id="status" class="status">준비됨</div>
-      <div id="links" class="status mono">실행 링크: -</div>
+      <div id="links" class="result-line">실행 링크: -</div>
     </section>
   </div>
 
   <script>
     const $ = (id) => document.getElementById(id);
-    const setStatus = (cls, msg) => {
+
+    // ── Status helpers ────────────────────────────────────────────────────────
+
+    function setStatus(cls, msg) {
       const el = $("status");
       el.className = `status ${cls || ""}`.trim();
       el.textContent = msg;
-    };
-    const setLinks = (msg) => { $("links").textContent = msg; };
+    }
+    function setLinks(msg) { $("links").textContent = msg; }
+
+    // ── Char counters ─────────────────────────────────────────────────────────
+
+    function updateCharCount(inputId, countId) {
+      const el = $(inputId);
+      const counter = $(countId);
+      if (el && counter) counter.textContent = el.value.length + "자";
+    }
+    $("topic").addEventListener("input",  () => updateCharCount("topic",  "topic_count"));
+    $("method").addEventListener("input", () => updateCharCount("method", "method_count"));
+
+    // ── Real-time validation ──────────────────────────────────────────────────
+
+    ["topic", "method", "token"].forEach(id => {
+      const el = $(id);
+      if (el) el.addEventListener("input", function() {
+        if (this.value.trim()) this.classList.remove("invalid");
+      });
+    });
+
+    // ── Password toggle ───────────────────────────────────────────────────────
+
+    $("tokenToggle").addEventListener("click", function() {
+      const el = $("token");
+      if (el.type === "password") { el.type = "text";     this.textContent = "숨기기"; }
+      else                        { el.type = "password"; this.textContent = "보기"; }
+    });
+
+    // ── Running state ─────────────────────────────────────────────────────────
+
+    let elapsedTimer = null;
+
+    function setRunning(running) {
+      const btn = $("runBtn");
+      if (running) {
+        btn.disabled = true;
+        let elapsed = 0;
+        btn.innerHTML = '<span class="run-spin">⟳</span> 실행 중... <span id="elapsed">00:00</span>';
+        elapsedTimer = setInterval(() => {
+          elapsed++;
+          const el = $("elapsed");
+          if (el) {
+            const m = String(Math.floor(elapsed / 60)).padStart(2, "0");
+            const s = String(elapsed % 60).padStart(2, "0");
+            el.textContent = `${m}:${s}`;
+          }
+        }, 1000);
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = "▶ 워크플로우 실행";
+        if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
+      }
+    }
+
+    // ── Fill example ──────────────────────────────────────────────────────────
 
     function fillRequestedExample() {
-      $("topic").value = "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향";
-      $("method").value = "10차시 수업, 문제해결력 사전-사후 검사";
-      $("institution").value = "경북대학교";
-      $("department").value = "사범대학 정보컴퓨터교육과";
-      $("sample_size").value = "50";
+      $("topic").value           = "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향";
+      $("method").value          = "10차시 수업, 문제해결력 사전-사후 검사";
+      $("institution").value     = "경북대학교";
+      $("department").value      = "사범대학 정보컴퓨터교육과";
+      $("sample_size").value     = "50";
       $("duration_months").value = "6";
-      $("model").value = "gpt-4.1-mini";
-      setStatus("ok", "요청 예시값을 적용했습니다.");
+      $("model").value           = "gpt-4.1-mini";
+      updateCharCount("topic",  "topic_count");
+      updateCharCount("method", "method_count");
+      setStatus("ok", "예시값을 적용했습니다.");
     }
+
+    // ── GitHub API helpers ────────────────────────────────────────────────────
 
     function headers(token) {
       return {
@@ -184,95 +372,107 @@
       return data.artifacts || [];
     }
 
+    // ── Main run ──────────────────────────────────────────────────────────────
+
     async function run() {
       const cfg = {
-        owner: $("owner").value.trim(),
-        repo: $("repo").value.trim(),
-        ref: $("ref").value.trim(),
+        owner:    $("owner").value.trim(),
+        repo:     $("repo").value.trim(),
+        ref:      $("ref").value.trim(),
         workflow: $("workflow").value.trim(),
-        token: $("token").value.trim(),
+        token:    $("token").value.trim(),
       };
       const inputs = {
-        topic: $("topic").value.trim(),
-        method: $("method").value.trim(),
-        institution: $("institution").value.trim(),
-        department: $("department").value.trim(),
-        sample_size: String($("sample_size").value || "").trim(),
+        topic:           $("topic").value.trim(),
+        method:          $("method").value.trim(),
+        institution:     $("institution").value.trim(),
+        department:      $("department").value.trim(),
+        sample_size:     String($("sample_size").value || "").trim(),
         duration_months: String($("duration_months").value || "").trim(),
-        model: $("model").value.trim(),
+        model:           $("model").value.trim(),
       };
 
-      const required = ["token", "owner", "repo", "ref", "workflow"];
-      const missingCfg = required.filter(k => !cfg[k]);
+      // Validate
+      const missingCfg = ["token","owner","repo","ref","workflow"].filter(k => !cfg[k]);
       if (missingCfg.length) {
+        if (cfg.token === "") $("token").classList.add("invalid");
         setStatus("bad", `GitHub 설정 누락: ${missingCfg.join(", ")}`);
         return;
       }
-      if (!inputs.topic || !inputs.method) {
-        setStatus("bad", "필수 입력(연구 주제, 연구 방법)을 확인하세요.");
-        return;
-      }
+      if (!inputs.topic)  { $("topic").classList.add("invalid");  setStatus("bad", "연구 주제를 입력하세요."); return; }
+      if (!inputs.method) { $("method").classList.add("invalid"); setStatus("bad", "연구 방법을 입력하세요."); return; }
 
+      setRunning(true);
       const started = new Date().toISOString();
       const runPage = `https://github.com/${cfg.owner}/${cfg.repo}/actions/workflows/${cfg.workflow}`;
       setLinks(`워크플로우 페이지: ${runPage}`);
       setStatus("warn", "워크플로우 실행 요청 중...");
 
       try {
-        await dispatchWorkflow(cfg, inputs);
-        setStatus("warn", "실행 요청 완료. run 생성 대기 중...");
-      } catch (e) {
-        setStatus("bad", String(e.message || e));
-        return;
-      }
-
-      let runInfo = null;
-      for (let i = 0; i < 30; i++) {
         try {
-          runInfo = await findLatestRun(cfg, started);
-          if (runInfo) break;
+          await dispatchWorkflow(cfg, inputs);
+          setStatus("warn", "실행 요청 완료. run 생성 대기 중...");
         } catch (e) {
           setStatus("bad", String(e.message || e));
           return;
         }
-        await new Promise(r => setTimeout(r, 2000));
-      }
 
-      if (!runInfo) {
-        setStatus("bad", "run 정보를 찾지 못했습니다. Actions 탭에서 수동 확인하세요.");
-        return;
-      }
-
-      setLinks(`실행 링크: ${runInfo.html_url}`);
-      setStatus("warn", `실행 시작됨 (run #${runInfo.run_number}). 상태 폴링 중...`);
-
-      while (true) {
-        await new Promise(r => setTimeout(r, 4000));
-        try {
-          const latest = await findLatestRun(cfg, started);
-          if (latest) runInfo = latest;
-        } catch {}
-
-        if (runInfo && runInfo.status === "completed") {
-          if (runInfo.conclusion === "success") {
-            const artifacts = await fetchArtifacts(cfg, runInfo.id);
-            const alive = artifacts.filter(a => !a.expired);
-            const artifactNames = alive.length ? alive.map(a => a.name).join(", ") : "없음";
-            setStatus("ok", `완료: 성공\nArtifacts: ${artifactNames}`);
-            setLinks(`실행 링크: ${runInfo.html_url}\nArtifacts는 해당 run 페이지 우측에서 다운로드하세요.`);
-          } else {
-            setStatus("bad", `완료: 실패 (${runInfo.conclusion || "unknown"})\n${runInfo.html_url}`);
+        let runInfo = null;
+        for (let i = 0; i < 30; i++) {
+          try {
+            runInfo = await findLatestRun(cfg, started);
+            if (runInfo) break;
+          } catch (e) {
+            setStatus("bad", String(e.message || e));
+            return;
           }
+          await new Promise(r => setTimeout(r, 2000));
+        }
+
+        if (!runInfo) {
+          setStatus("bad", "run 정보를 찾지 못했습니다. Actions 탭에서 수동 확인하세요.");
           return;
         }
 
-        const phase = runInfo ? `${runInfo.status} (${runInfo.name || "workflow"})` : "pending";
-        setStatus("warn", `실행 중... ${phase}`);
+        setLinks(`실행 링크: ${runInfo.html_url}`);
+        setStatus("warn", `실행 시작됨 (run #${runInfo.run_number}). 상태 폴링 중...`);
+
+        while (true) {
+          await new Promise(r => setTimeout(r, 4000));
+          try {
+            const latest = await findLatestRun(cfg, started);
+            if (latest) runInfo = latest;
+          } catch {}
+
+          if (runInfo && runInfo.status === "completed") {
+            if (runInfo.conclusion === "success") {
+              const artifacts = await fetchArtifacts(cfg, runInfo.id);
+              const alive = artifacts.filter(a => !a.expired);
+              const artifactNames = alive.length ? alive.map(a => a.name).join(", ") : "없음";
+              setStatus("ok", `완료: 성공\nArtifacts: ${artifactNames}`);
+              setLinks(`실행 링크: ${runInfo.html_url}\nArtifacts는 해당 run 페이지 우측에서 다운로드하세요.`);
+            } else {
+              setStatus("bad", `완료: 실패 (${runInfo.conclusion || "unknown"})\n${runInfo.html_url}`);
+            }
+            return;
+          }
+
+          const phase = runInfo ? `${runInfo.status} (${runInfo.name || "workflow"})` : "pending";
+          setStatus("warn", `실행 중... ${phase}`);
+        }
+      } finally {
+        setRunning(false);
       }
     }
 
+    // ── Event listeners ───────────────────────────────────────────────────────
+
     $("runBtn").addEventListener("click", run);
     $("fillBtn").addEventListener("click", fillRequestedExample);
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    updateCharCount("topic",  "topic_count");
+    updateCharCount("method", "method_count");
   </script>
 </body>
 </html>

@@ -613,7 +613,17 @@ def fill_template_tables(section_xml: str, draft: dict, red_char_pr_ids: set[str
     ET.register_namespace("hs", "http://www.hancom.co.kr/hwpml/2011/section")
     ET.register_namespace("hp", ns_uri)
     body_xml = ET.tostring(root, encoding="unicode")
-    return f'<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>{body_xml}'
+
+    # Preserve original XML declaration and root <hs:sec ...> namespace declarations from template.
+    decl_match = re.match(r"^\s*(<\?xml[^>]*\?>)?\s*", section_xml)
+    xml_decl = decl_match.group(1) if decl_match else None
+    root_match = re.search(r"<hs:sec\b[^>]*>", section_xml)
+    if root_match:
+        body_xml = re.sub(r"^<hs:sec\b[^>]*>", root_match.group(0), body_xml, count=1)
+
+    if not xml_decl:
+        xml_decl = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'
+    return f"{xml_decl}{body_xml}"
 
 
 def write_hwpx_from_template(template_path: Path, output_path: Path, draft: dict) -> None:

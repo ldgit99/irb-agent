@@ -493,23 +493,55 @@
 
     // Map GitHub step status → display
     function stepsFromJobs(jobs) {
-      const job = jobs[0];
-      if (!job) return null;
+      if (!Array.isArray(jobs) || !jobs.length) return null;
+      const sorted = [...jobs].sort((a, b) =>
+        new Date(b.started_at || b.created_at || 0) - new Date(a.started_at || a.created_at || 0)
+      );
+      const job = sorted.find(j => Array.isArray(j.steps) && j.steps.some(s => DISPLAY_STEPS[s.name])) || sorted[0];
       const steps = job.steps || [];
-      const result = [];
-      steps.forEach((step, i) => {
+
+      // Keep a stable pipeline order and only overlay fetched status.
+      const merged = DEFAULT_STEPS.map((s, i) => ({ ...s, num: i + 1 }));
+      const idx = new Map(merged.map((s, i) => [s.id, i]));
+      steps.forEach(step => {
         const label = DISPLAY_STEPS[step.name];
         if (!label) return;
         let cls = "wait", status = "대기";
         if (step.status === "in_progress") { cls = "run"; status = "실행중"; }
         else if (step.status === "completed") {
-          if (step.conclusion === "success")  { cls = "ok";   status = "완료"; }
-          else if (step.conclusion === "skipped") { cls = "skip"; status = "건너뜀"; }
-          else { cls = "bad"; status = "실패"; }
+          if (step.conclusion === "success") cls = "ok", status = "완료";
+          else if (step.conclusion === "skipped") cls = "skip", status = "건너뜀";
+          else cls = "bad", status = "실패";
         }
-        result.push({ id: step.name, title: label, cls, status, num: result.length + 1 });
+        const i = idx.get(step.name);
+        if (i !== undefined) merged[i] = { id: step.name, title: label, cls, status, num: i + 1 };
       });
-      return result.length ? result : null;
+      return merged;
+    }
+
+    async function settlePipelineAfterCompletion(c, runInfo, maxAttempts = 6) {
+      let last = null;
+      for (let i = 0; i < maxAttempts; i++) {
+        const jobs = await fetchJobs(c, runInfo.id);
+        const steps = jobs ? stepsFromJobs(jobs) : null;
+        if (steps) {
+          renderPipeline(steps);
+          last = steps;
+          const hasRunning = steps.some(s => s.cls === "run");
+          if (!hasRunning) return steps;
+        }
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      if (last) {
+        // If GitHub step metadata is delayed, avoid leaving UI stuck on a running step.
+        const fallback = last.map(s => {
+          if (s.cls === "run") return { ...s, cls: runInfo.conclusion === "success" ? "ok" : "bad", status: runInfo.conclusion === "success" ? "완료" : "실패" };
+          return s;
+        });
+        renderPipeline(fallback);
+        return fallback;
+      }
+      return null;
     }
 
     // ── Quality bars ──────────────────────────────────────────────────────────
@@ -711,16 +743,14 @@
         if (runInfo.conclusion === "success") {
           setMode("완료", "success");
           setStatus("ok", `Run #${runInfo.run_number} 완료! GitHub Pages 배포 중 (1~2분 소요)...`);
-          // Refresh final job steps
-          const jobs = await fetchJobs(c, runInfo.id);
-          if (jobs) { const steps = stepsFromJobs(jobs); if (steps) renderPipeline(steps); }
+          // Refresh final job steps (with settle retries to avoid stale "in_progress" display)
+          await settlePipelineAfterCompletion(c, runInfo);
           // Poll Pages for results
           pollPagesResult(runInfo.run_number, c.owner, c.repo);
         } else {
           setMode("실패", "fail");
           setStatus("bad", `Run #${runInfo.run_number} 실패 (${runInfo.conclusion}). Actions 탭을 확인하세요.`);
-          const jobs = await fetchJobs(c, runInfo.id);
-          if (jobs) { const steps = stepsFromJobs(jobs); if (steps) renderPipeline(steps); }
+          await settlePipelineAfterCompletion(c, runInfo);
         }
 
       } catch(e) {

@@ -609,8 +609,11 @@ def fill_template_tables(section_xml: str, draft: dict, red_char_pr_ids: set[str
                     char_pr_id="12",
                 )
 
+    # Keep HWPX-friendly prefixes. Some Hancom builds are sensitive to auto-generated ns0/ns1 prefixes.
+    ET.register_namespace("hs", "http://www.hancom.co.kr/hwpml/2011/section")
     ET.register_namespace("hp", ns_uri)
-    return ET.tostring(root, encoding="utf-8", xml_declaration=True).decode("utf-8")
+    body_xml = ET.tostring(root, encoding="unicode")
+    return f'<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>{body_xml}'
 
 
 def write_hwpx_from_template(template_path: Path, output_path: Path, draft: dict) -> None:

@@ -1,5 +1,33 @@
 [
   {
+    "run_number": 9,
+    "run_id": "22522692189",
+    "run_url": "https://github.com/ldgit99/irb-agent/actions/runs/22522692189",
+    "timestamp": "2026-02-28T14:36:15+00:00",
+    "topic": "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향",
+    "model": "gpt-4.1-mini",
+    "quality": {
+      "total": 92.9,
+      "sentence_score": 100.0,
+      "required_score": 85.7,
+      "details": [
+        "문장수 - 섹션2: 11, 섹션3: 45",
+        "섹션 11개 완전성: 충족",
+        "목적 섹션 10문장 이상: 충족",
+        "방법 섹션 30문장 이상: 충족",
+        "방법 섹션 1~5 순서 포함: 충족",
+        "방법 섹션 소요시간 언급: 미충족",
+        "방법 섹션 윤리 고려 언급: 충족",
+        "방법 섹션 안전 절차 언급: 충족"
+      ]
+    },
+    "files": {
+      "hwpx": "results/irb-9.hwpx",
+      "md": "results/irb-9.md",
+      "json": "results/irb-9.json"
+    }
+  },
+  {
     "run_number": 8,
     "run_id": "22522543295",
     "run_url": "https://github.com/ldgit99/irb-agent/actions/runs/22522543295",

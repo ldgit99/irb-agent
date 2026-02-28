@@ -400,6 +400,10 @@
           <div class="field"><label>연구책임자 성명</label><input id="pi_name" placeholder="예: 홍길동" /></div>
           <div class="field"><label>연구책임자 전화번호</label><input id="pi_phone" placeholder="예: 010-1234-5678" /></div>
         </div>
+        <div class="field">
+          <label>기타(추가 요청사항)</label>
+          <textarea id="extra_notes" placeholder="예: 특정 용어 사용, 작성 톤, 반드시 포함할 문구 등"></textarea>
+        </div>
 
         <div class="section-title">API 설정</div>
         <div class="row">
@@ -471,7 +475,7 @@
   </div>
 
   <script>
-    const fields = ["research_topic","research_topic_en","research_method","study_start","study_end","target_type","target_count","study_design","consent_method","data_tools","risk_level","sensitive_data","face_to_face","institution","department","pi_name","pi_phone"];
+    const fields = ["research_topic","research_topic_en","research_method","study_start","study_end","target_type","target_count","study_design","consent_method","data_tools","risk_level","sensitive_data","face_to_face","institution","department","pi_name","pi_phone","extra_notes"];
     const requiredIds = ["research_topic","research_method","study_start","study_end","target_type","target_count"];
     const defaultStages = [
       ["save-input","입력 저장"],
@@ -741,6 +745,7 @@
         face_to_face:    "예",
         pi_name:         "이동국",
         pi_phone:        "053-950-5845",
+        extra_notes:     "",
       });
       setStatus("good", "예시 입력값을 채웠습니다.");
     }

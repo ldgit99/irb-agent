@@ -51,6 +51,7 @@ FIELDS = {
     "대면 진행 여부": "face_to_face",
     "연구책임자 성명": "pi_name",
     "연구책임자 전화번호": "pi_phone",
+    "기타(추가 요청사항)": "extra_notes",
 }
 
 SECTION_TITLES = [
@@ -110,6 +111,10 @@ def render_input_markdown(v: dict[str, str]) -> str:
 
 * 연구책임자 성명: {v.get("pi_name","")}
 * 연구책임자 전화번호: {v.get("pi_phone","")}
+
+## 기타
+
+* 기타(추가 요청사항): {v.get("extra_notes","")}
 
 ## 작성 팁
 
@@ -288,6 +293,7 @@ def run_api_pipeline(
     method = values.get("research_method", "").strip()
     institution = values.get("institution", "").strip() or "미정"
     department = values.get("department", "").strip() or "미정"
+    extra_notes = values.get("extra_notes", "").strip()
     sample_size = parse_sample_size(values.get("target_count", ""))
     duration_months = parse_duration_months(values.get("study_start", ""), values.get("study_end", ""))
     model = model_override.strip() or os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
@@ -316,6 +322,8 @@ def run_api_pipeline(
         "--output-dir",
         str(OUTPUT_DIR),
     ]
+    if extra_notes:
+        cmd.extend(["--additional-notes", extra_notes])
 
     env_extra = {}
     if api_key.strip():

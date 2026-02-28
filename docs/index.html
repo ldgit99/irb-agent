@@ -588,6 +588,26 @@
       document.getElementById("dlNote").textContent = "✓ Pages 배포 완료 — 클릭하여 다운로드";
     }
 
+    async function verifyResultFiles(runNumber, owner, repo) {
+      const base = `https://${owner}.github.io/${repo}/results`;
+      const urls = [
+        `${base}/irb-${runNumber}.hwpx`,
+        `${base}/irb-${runNumber}.md`,
+        `${base}/irb-${runNumber}.json`,
+      ];
+      for (const u of urls) {
+        try {
+          const res = await fetch(`${u}?t=${Date.now()}`, { method: "HEAD" });
+          if (!res.ok) return false;
+          const len = Number(res.headers.get("content-length") || "0");
+          if (len > 0 && len < 512) return false;
+        } catch {
+          return false;
+        }
+      }
+      return true;
+    }
+
     function disableDownloadLinks() {
       ["dlHwpx", "dlMd", "dlJson"].forEach(id => {
         const el = document.getElementById(id);
@@ -671,10 +691,13 @@
           if (res.ok) {
             const data = await res.json();
             if (data.quality) {
-              setQuality(data.quality);
-              setDownloadLinks(runNumber, owner, repo);
-              await loadHistory();
-              return;
+              const filesReady = await verifyResultFiles(runNumber, owner, repo);
+              if (filesReady) {
+                setQuality(data.quality);
+                setDownloadLinks(runNumber, owner, repo);
+                await loadHistory();
+                return;
+              }
             }
           }
         } catch {}

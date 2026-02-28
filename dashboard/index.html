@@ -29,97 +29,343 @@
       min-height: 100vh;
     }
     .wrap { max-width: 1280px; margin: 0 auto; padding: 24px; }
-    h1 { margin: 0; font-size: 30px; letter-spacing: -0.02em; }
-    .sub { margin-top: 8px; color: var(--muted); font-size: 14px; }
-    .layout { margin-top: 16px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      box-shadow: 0 8px 24px rgba(20,45,80,0.08);
-    }
-    .panel { padding: 14px; }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .page-header { margin-bottom: 16px; }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+    .sub { margin-top: 6px; color: var(--muted); font-size: 14px; }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .layout { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 24px rgba(20,45,80,0.08); }
+    .panel { padding: 16px; }
+
+    /* ── Typography ──────────────────────────────────────────── */
     h2 { margin: 0 0 10px; font-size: 16px; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .panel-header h2 { margin: 0; }
     .hint { margin: 0 0 10px; font-size: 12px; color: var(--muted); }
-    .required-mark { color: #c93440; font-weight: 700; }
+    .required-mark { color: var(--bad); font-weight: 700; }
     .section-title {
-      margin: 12px 0 8px;
-      font-size: 13px;
+      margin: 14px 0 8px;
+      font-size: 11px;
       color: #1f4f9f;
       font-weight: 700;
-      border-left: 4px solid #9bbdff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-left: 3px solid #9bbdff;
       padding-left: 8px;
     }
+    .section-sep {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin: 12px 0 7px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    /* ── Form ────────────────────────────────────────────────── */
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .field { margin-bottom: 8px; }
-    label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
     input, select, textarea {
-      width:100%; border:1px solid var(--line); border-radius:10px; padding:10px;
-      font-size:14px; background:#fff; color:var(--ink);
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 14px;
+      background: #fff;
+      color: var(--ink);
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    textarea { min-height: 70px; resize: vertical; }
-    .actions { margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(11,99,246,0.12);
+    }
+    input.invalid, textarea.invalid, select.invalid {
+      border-color: var(--bad);
+      background: #fff8f8;
+    }
+    input.invalid:focus, textarea.invalid:focus, select.invalid:focus {
+      box-shadow: 0 0 0 3px rgba(201,52,64,0.12);
+    }
+    textarea { min-height: 68px; resize: vertical; }
+
+    /* ── Char counter ────────────────────────────────────────── */
+    .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 2px; }
+
+    /* ── Password toggle ─────────────────────────────────────── */
+    .pwd-wrap { position: relative; }
+    .pwd-wrap input { padding-right: 54px; }
+    .pwd-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: #ecf3ff;
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1.5;
+    }
+    .pwd-btn:hover { background: #dde9ff; }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
     button, .btn-link {
-      border:0; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer;
-      text-decoration:none; display:inline-flex; align-items:center;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: inherit;
+      font-size: 14px;
+      transition: opacity 0.15s, transform 0.1s, background 0.15s;
     }
-    .primary { background: var(--accent); color:#fff; }
-    .success { background:#e8f7ee; color:#176d45; }
-    .ghost { background:#ecf3ff; color:#204c95; }
+    button:active:not(:disabled) { transform: scale(0.97); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .primary { background: var(--accent); color: #fff; }
+    .primary:hover:not(:disabled) { background: #0953d4; }
+    .ghost { background: #ecf3ff; color: #204c95; }
+    .ghost:hover { background: #dde9ff; }
+    .ghost.sm { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
+    .ghost.danger { background: #fff5f6; color: var(--bad); }
+    .ghost.danger:hover { background: #feecee; }
+
+    /* Primary action row */
+    .actions-primary { display: flex; gap: 8px; margin-top: 14px; }
+    .actions-primary .run-btn { flex: 1; justify-content: center; font-size: 15px; padding: 12px; }
+    .download-btn {
+      background: #ecf3ff;
+      color: #204c95;
+      border: 1px solid rgba(11,99,246,.2);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .download-btn:hover { background: #dde9ff; }
+
+    /* Secondary action row */
+    .actions-secondary { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+    /* ── Status bar ──────────────────────────────────────────── */
     .status {
-      margin-top: 10px; border:1px dashed var(--line); border-radius:10px; padding:10px;
-      font-size:13px; color:var(--muted); background:#fff;
+      margin-top: 10px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      background: #fff;
     }
-    .status.good { color: var(--good); border-color: rgba(21,138,82,.35); }
-    .status.warn { color: var(--warn); border-color: rgba(198,119,0,.35); }
-    .status.bad { color: var(--bad); border-color: rgba(201,52,64,.35); }
+    .status.good { color: var(--good); border-color: rgba(21,138,82,.3); background: #f3fbf6; }
+    .status.warn { color: var(--warn); border-color: rgba(198,119,0,.3); background: #fffbf3; }
+    .status.bad  { color: var(--bad);  border-color: rgba(201,52,64,.3);  background: #fff5f6; }
 
-    .pipeline, .history, .preview {
-      border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px;
-    }
-    .pipeline, .history { max-height: 250px; overflow:auto; }
-    .preview { max-height: 240px; overflow:auto; white-space: pre-wrap; font-family: Consolas, monospace; font-size: 12px; }
-    .agent {
-      display:grid; grid-template-columns:44px 1fr auto; gap:8px; align-items:center;
-      border:1px solid rgba(16,35,63,.08); border-radius:10px; padding:8px; margin-bottom:8px;
-    }
-    .agent:last-child { margin-bottom:0; }
-    .dot { width:34px; height:34px; border-radius:8px; display:inline-block; image-rendering: pixelated; }
-    .dot.wait { background:#cfdcf3; }
-    .dot.run { background:#ffd45e; animation: hop .55s infinite alternate; }
-    .dot.ok { background:#4dd087; }
-    .dot.bad { background:#ff7f8e; }
-    @keyframes hop { from { transform:translateY(0); } to { transform:translateY(-3px); } }
-    .badge { font-size:11px; font-weight:700; border-radius:999px; padding:4px 8px; color:#fff; }
-    .b-wait { background:#7b8dab; } .b-run { background:#d88400; } .b-ok { background:#1f9d62; } .b-bad { background:#c93440; }
-    .meta { font-size:12px; color:var(--muted); }
+    /* ── Mode chip ───────────────────────────────────────────── */
     .mode-chip {
-      display:inline-flex; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:700;
-      border:1px solid var(--line); background:#fff; color:var(--muted); margin-bottom:8px;
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 4px 11px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
     }
-    .mode-chip.api { color:#0b63f6; border-color:rgba(11,99,246,.35); background:#ecf3ff; }
+    .mode-chip.api     { color: var(--accent); border-color: rgba(11,99,246,.3);  background: #ecf3ff; }
+    .mode-chip.running { color: var(--warn);   border-color: rgba(198,119,0,.3);  background: #fffbf3; }
+    .mode-chip.fail    { color: var(--bad);    border-color: rgba(201,52,64,.3);   background: #fff5f6; }
+    .mode-chip.success { color: var(--good);   border-color: rgba(21,138,82,.3);  background: #f3fbf6; }
 
-    .quality { border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px; margin-top:8px; }
-    .q-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:6px; }
-    .q-item { border:1px solid var(--line); border-radius:10px; padding:8px; }
-    .q-k { font-size:11px; color:var(--muted); }
-    .q-v { font-size:18px; font-weight:800; }
-    .history-item { border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:8px; font-size:12px; background:#fff; }
-    .history-item:last-child { margin-bottom:0; }
-    @media (max-width: 980px) { .layout { grid-template-columns:1fr; } }
+    /* ── Stepper pipeline ────────────────────────────────────── */
+    .stepper {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 8px 10px;
+      position: relative;
+    }
+    /* Vertical connector line: left=10(padding)+22(dot center)=32px, -1px for line half = 31px */
+    .stepper-connector {
+      position: absolute;
+      left: 31px;
+      top: 30px;
+      bottom: 30px;
+      width: 2px;
+      background: var(--line);
+      border-radius: 1px;
+      z-index: 0;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 5px 0;
+      position: relative;
+    }
+    .step-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #cfdcf3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      z-index: 1;
+      margin: 0 auto;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .step.ok  .step-dot { background: var(--good); }
+    .step.run .step-dot { background: var(--warn); animation: hop 0.55s infinite alternate; }
+    .step.bad .step-dot { background: var(--bad); }
+    .step-title { font-size: 13px; font-weight: 600; line-height: 1.2; }
+    .step-id { font-size: 11px; color: var(--muted); }
+    .badge { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; color: #fff; white-space: nowrap; }
+    .b-wait { background: #7b8dab; }
+    .b-run  { background: var(--warn); }
+    .b-ok   { background: var(--good); }
+    .b-bad  { background: var(--bad); }
+
+    /* ── Quality bars ────────────────────────────────────────── */
+    .quality { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px 12px; }
+    .q-row { display: grid; grid-template-columns: 56px 1fr 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .q-row:last-of-type { margin-bottom: 0; }
+    .q-name { font-size: 12px; color: var(--muted); }
+    .q-bar-wrap { background: #eef2fb; border-radius: 999px; height: 7px; overflow: hidden; }
+    .q-bar {
+      height: 100%;
+      border-radius: 999px;
+      background: #cfdcf3;
+      width: 0%;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+    }
+    .q-bar.good { background: var(--good); }
+    .q-bar.warn { background: var(--warn); }
+    .q-bar.bad  { background: var(--bad); }
+    .q-val { font-size: 13px; font-weight: 800; text-align: right; }
+    .q-details { font-size: 11px; color: var(--muted); margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--line); }
+
+    /* ── History ─────────────────────────────────────────────── */
+    .history-wrap {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 6px;
+    }
+    .history-item {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 10px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      background: #fff;
+    }
+    .history-item:last-child { margin-bottom: 0; }
+    .history-item.ok   { border-left-color: var(--good); }
+    .history-item.fail { border-left-color: var(--bad); }
+    .hi-header { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .hi-badge  { font-size: 10px; font-weight: 700; border-radius: 999px; padding: 2px 7px; color: #fff; }
+    .hi-time   { font-size: 11px; color: var(--muted); margin-left: auto; }
+    .hi-topic  { font-weight: 600; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hi-meta, .hi-quality { color: var(--muted); font-size: 11px; }
+    .hi-error  { color: var(--bad); font-size: 11px; margin-top: 2px; }
+
+    /* ── Preview ─────────────────────────────────────────────── */
+    .preview-wrap { border: 1px solid var(--line); border-radius: 12px; background: #fff; max-height: 180px; overflow: auto; }
+    .preview-wrap pre {
+      margin: 0;
+      padding: 10px;
+      white-space: pre-wrap;
+      font-family: "Consolas", "D2Coding", monospace;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Result line ─────────────────────────────────────────── */
+    .result-line {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: #f8faff;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    .result-line code { background: #e8f0ff; border-radius: 4px; padding: 1px 5px; font-size: 11px; color: var(--accent); }
+
+    /* ── Spinners & animations ───────────────────────────────── */
+    .spin-icon { display: inline-block; animation: spin 1s linear infinite; }
+    .run-spin  { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes hop  { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+
+    /* ── Mobile ──────────────────────────────────────────────── */
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .wrap { padding: 12px; }
+      h1 { font-size: 22px; }
+      .row { grid-template-columns: 1fr; }
+      .actions-primary { flex-direction: column; }
+      .actions-secondary { gap: 4px; }
+      .actions-secondary button { font-size: 11px; padding: 5px 8px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>IRB 입력 대시보드</h1>
-    <div class="sub">API 실행 + 품질 점수 + 실행 이력</div>
+    <div class="page-header">
+      <h1>IRB 입력 대시보드</h1>
+      <p class="sub">API 실행 + 품질 점수 + 실행 이력</p>
+    </div>
+
     <div class="layout">
+      <!-- ── Left: Input Form ─────────────────────────────────── -->
       <section class="card panel">
         <h2>입력 편집</h2>
         <p class="hint">IRB 보고서 생성을 위한 기본 정보를 입력하세요. <span class="required-mark">*</span> 표시는 필수 항목입니다.</p>
+
         <div class="section-title">필수 입력</div>
-        <div class="field"><label>연구 주제 <span class="required-mark">*</span></label><textarea id="research_topic" required placeholder="예: 생성형 AI 활용 수업이 학습 몰입에 미치는 영향"></textarea></div>
-        <div class="field"><label>연구 방법 <span class="required-mark">*</span></label><textarea id="research_method" required placeholder="예: 사전-사후 검사, 설문, 인터뷰를 포함한 혼합연구"></textarea></div>
+
+        <div class="field">
+          <label>연구 주제 <span class="required-mark">*</span></label>
+          <textarea id="research_topic" required placeholder="예: 생성형 AI 활용 수업이 학습 몰입에 미치는 영향"></textarea>
+          <div class="char-count" id="topic_count">0자</div>
+        </div>
+        <div class="field">
+          <label>연구 방법 <span class="required-mark">*</span></label>
+          <textarea id="research_method" required placeholder="예: 사전-사후 검사, 설문, 인터뷰를 포함한 혼합연구"></textarea>
+          <div class="char-count" id="method_count">0자</div>
+        </div>
         <div class="row">
           <div class="field"><label>연구 시작일 <span class="required-mark">*</span></label><input id="study_start" type="date" required /></div>
           <div class="field"><label>연구 종료일 <span class="required-mark">*</span></label><input id="study_end" type="date" required /></div>
@@ -153,48 +399,76 @@
 
         <div class="section-title">API 설정</div>
         <div class="row">
-          <div class="field"><label>OpenAI API Key (저장 안 됨)</label><input id="api_key" type="password" placeholder="sk-..." /></div>
+          <div class="field">
+            <label>OpenAI API Key (저장 안 됨)</label>
+            <div class="pwd-wrap">
+              <input id="api_key" type="password" placeholder="sk-..." />
+              <button type="button" id="pwdToggle" class="pwd-btn">보기</button>
+            </div>
+          </div>
           <div class="field"><label>모델</label><input id="api_model" value="gpt-4.1-mini" /></div>
         </div>
 
-        <div class="actions">
-          <button class="primary" id="saveBtn">input-form.md 저장</button>
-          <button class="success" id="runBtn">에이전트 실행</button>
-          <button class="ghost" id="reloadBtn">다시 불러오기</button>
-          <button class="ghost" id="quickTemplateBtn">요청 양식 채우고 저장</button>
-          <button class="ghost" id="exampleBtn">예시 채우기</button>
-          <button class="ghost" id="clearBtn">입력 초기화</button>
-          <a class="btn-link ghost" href="/api/download/hwpx">IRB 신청서 다운받기</a>
+        <!-- Primary actions -->
+        <div class="actions-primary">
+          <button class="primary run-btn" id="runBtn">▶ 에이전트 실행</button>
+          <a class="btn-link download-btn" href="/api/download/hwpx">↓ 신청서 다운받기</a>
         </div>
+
+        <!-- Secondary actions -->
+        <div class="actions-secondary">
+          <button class="ghost sm" id="saveBtn">저장</button>
+          <button class="ghost sm" id="exampleBtn">예시 채우기</button>
+          <button class="ghost sm" id="reloadBtn">다시 불러오기</button>
+          <button class="ghost sm" id="quickTemplateBtn">요청서 저장</button>
+          <button class="ghost sm danger" id="clearBtn">초기화</button>
+        </div>
+
         <div id="status" class="status">준비됨</div>
       </section>
 
+      <!-- ── Right: Status Panel ──────────────────────────────── -->
       <section class="card panel">
-        <h2>실행 상태</h2>
-        <div id="modeChip" class="mode-chip">실행 모드: 대기</div>
-        <div id="pipeline" class="pipeline"></div>
-        <div id="result" class="meta" style="margin-top:8px;">결과 파일: -</div>
-
-        <div class="quality">
-          <div class="q-grid">
-            <div class="q-item"><div class="q-k">종합 점수</div><div class="q-v" id="qTotal">-</div></div>
-            <div class="q-item"><div class="q-k">문장수 점수</div><div class="q-v" id="qSentence">-</div></div>
-            <div class="q-item"><div class="q-k">필수항목 점수</div><div class="q-v" id="qRequired">-</div></div>
-          </div>
-          <div id="qDetails" class="meta">품질 세부: -</div>
+        <div class="panel-header">
+          <h2>실행 상태</h2>
+          <span id="modeChip" class="mode-chip">대기</span>
         </div>
 
-        <h2 style="margin-top:12px;">실행 이력</h2>
-        <div id="history" class="history"></div>
+        <div id="pipeline" class="stepper"></div>
+        <div id="result" class="result-line">결과 파일: -</div>
 
-        <h2 style="margin-top:12px;">입력 파일 프리뷰</h2>
-        <pre id="preview" class="preview"></pre>
+        <div class="section-sep">품질 점수</div>
+        <div class="quality">
+          <div class="q-row">
+            <div class="q-name">종합</div>
+            <div class="q-bar-wrap"><div class="q-bar" id="qBarTotal"></div></div>
+            <div class="q-val" id="qTotal">-</div>
+          </div>
+          <div class="q-row">
+            <div class="q-name">문장수</div>
+            <div class="q-bar-wrap"><div class="q-bar" id="qBarSentence"></div></div>
+            <div class="q-val" id="qSentence">-</div>
+          </div>
+          <div class="q-row">
+            <div class="q-name">필수항목</div>
+            <div class="q-bar-wrap"><div class="q-bar" id="qBarRequired"></div></div>
+            <div class="q-val" id="qRequired">-</div>
+          </div>
+          <div id="qDetails" class="q-details">세부: -</div>
+        </div>
+
+        <div class="section-sep">실행 이력</div>
+        <div id="history" class="history-wrap"></div>
+
+        <div class="section-sep">입력 파일 프리뷰</div>
+        <div class="preview-wrap"><pre id="preview"></pre></div>
       </section>
     </div>
   </div>
 
   <script>
     const fields = ["research_topic","research_method","study_start","study_end","target_type","target_count","study_design","consent_method","data_tools","risk_level","sensitive_data","face_to_face","institution","department","pi_name","pi_phone"];
+    const requiredIds = ["research_topic","research_method","study_start","study_end","target_type","target_count"];
     const defaultStages = [
       ["save-input","입력 저장"],
       ["prepare","실행 준비"],
@@ -203,60 +477,174 @@
       ["quality","품질 점수"],
       ["history","이력 기록"],
     ];
-    const state = { running:false, agents: defaultStages.map(([id,title])=>({id,title,status:"대기",cls:"wait"})) };
-    const $status = document.getElementById("status");
-    const $pipeline = document.getElementById("pipeline");
-    const $preview = document.getElementById("preview");
-    const $result = document.getElementById("result");
-    const $modeChip = document.getElementById("modeChip");
-    const $history = document.getElementById("history");
+    const state = { running: false, agents: defaultStages.map(([id,title]) => ({id, title, status:"대기", cls:"wait"})) };
 
-    function setStatus(type,msg){ $status.className=`status ${type||""}`.trim(); $status.textContent=msg; }
-    function getPayload(){ const p={}; fields.forEach(id=>p[id]=document.getElementById(id).value.trim()); return p; }
-    function setForm(data){ fields.forEach(id=>{ if(Object.prototype.hasOwnProperty.call(data,id)){ document.getElementById(id).value = data[id] ?? ""; }}); }
-    function clearForm(){ fields.forEach(id=>{ document.getElementById(id).value = ""; }); }
-    function fillExample(){
-      setForm({
-        research_topic: "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향",
-        research_method: "10차시 수업, 문제해결력 사전-사후 검사",
-        study_start: "2026-01-01",
-        study_end: "2026-06-30",
-        target_type: "교사",
-        target_count: "50",
-        study_design: "양적",
-        consent_method: "서면 동의",
-        data_tools: "설문지",
-        risk_level: "최소위험",
-        institution: "경북대학교",
-        department: "사범대학 정보컴퓨터교육과",
-        sensitive_data: "아니오",
-        face_to_face: "예",
-        pi_name: "이동국",
-        pi_phone: "053-950-5845",
-      });
-      setStatus("good", "예시 입력값을 채웠습니다.");
+    const $status   = document.getElementById("status");
+    const $pipeline = document.getElementById("pipeline");
+    const $preview  = document.getElementById("preview");
+    const $result   = document.getElementById("result");
+    const $modeChip = document.getElementById("modeChip");
+    const $history  = document.getElementById("history");
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    function setStatus(type, msg) {
+      $status.className = `status ${type||""}`.trim();
+      $status.textContent = msg;
     }
-    async function fillAndSaveRequestedTemplate(){
-      fillExample();
-      const ok = await saveInput();
-      if(ok){
-        setStatus("good", "요청 양식을 채우고 input-form.md 파일로 저장했습니다.");
+    function getPayload() {
+      const p = {};
+      fields.forEach(id => p[id] = document.getElementById(id).value.trim());
+      return p;
+    }
+    function setForm(data) {
+      fields.forEach(id => {
+        if (Object.prototype.hasOwnProperty.call(data, id)) {
+          document.getElementById(id).value = data[id] ?? "";
+        }
+      });
+      updateAllCharCounts();
+    }
+    function clearForm() {
+      fields.forEach(id => { document.getElementById(id).value = ""; });
+      updateAllCharCounts();
+    }
+
+    // ── Char counters ─────────────────────────────────────────────────────────
+
+    function updateCharCount(inputId, countId) {
+      const el = document.getElementById(inputId);
+      const counter = document.getElementById(countId);
+      if (el && counter) counter.textContent = el.value.length + "자";
+    }
+    function updateAllCharCounts() {
+      updateCharCount("research_topic", "topic_count");
+      updateCharCount("research_method", "method_count");
+    }
+    document.getElementById("research_topic").addEventListener("input", () => updateCharCount("research_topic", "topic_count"));
+    document.getElementById("research_method").addEventListener("input", () => updateCharCount("research_method", "method_count"));
+
+    // ── Real-time validation ──────────────────────────────────────────────────
+
+    function markInvalidFields(payload) {
+      requiredIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (!payload[id]) el.classList.add("invalid");
+        else el.classList.remove("invalid");
+      });
+    }
+    requiredIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("input",  function() { if (this.value.trim()) this.classList.remove("invalid"); });
+        el.addEventListener("change", function() { if (this.value.trim()) this.classList.remove("invalid"); });
+      }
+    });
+
+    // ── Date auto-set ─────────────────────────────────────────────────────────
+
+    document.getElementById("study_start").addEventListener("change", function() {
+      const endEl = document.getElementById("study_end");
+      if (!endEl.value && this.value) {
+        const d = new Date(this.value);
+        d.setMonth(d.getMonth() + 6);
+        endEl.value = d.toISOString().split("T")[0];
+      }
+    });
+
+    // ── Password toggle ───────────────────────────────────────────────────────
+
+    document.getElementById("pwdToggle").addEventListener("click", function() {
+      const el = document.getElementById("api_key");
+      if (el.type === "password") { el.type = "text";     this.textContent = "숨기기"; }
+      else                        { el.type = "password"; this.textContent = "보기"; }
+    });
+
+    // ── Running state (with elapsed timer) ───────────────────────────────────
+
+    let elapsedTimer = null;
+
+    function setRunning(running) {
+      state.running = running;
+      const btn = document.getElementById("runBtn");
+      if (running) {
+        btn.disabled = true;
+        let elapsed = 0;
+        btn.innerHTML = '<span class="run-spin">⟳</span> 실행 중... <span id="elapsed">00:00</span>';
+        elapsedTimer = setInterval(() => {
+          elapsed++;
+          const el = document.getElementById("elapsed");
+          if (el) {
+            const m = String(Math.floor(elapsed / 60)).padStart(2, "0");
+            const s = String(elapsed % 60).padStart(2, "0");
+            el.textContent = `${m}:${s}`;
+          }
+        }, 1000);
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = "▶ 에이전트 실행";
+        if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
       }
     }
-    function setMode(mode){ const m=(mode||"대기"); $modeChip.textContent=`실행 모드: ${m}`; $modeChip.className=`mode-chip ${String(mode).toLowerCase()==="api"?"api":""}`; }
-    function resetQuality(){ document.getElementById("qTotal").textContent="-"; document.getElementById("qSentence").textContent="-"; document.getElementById("qRequired").textContent="-"; document.getElementById("qDetails").textContent="품질 세부: -"; }
-    function setQuality(q){
-      if(!q){ resetQuality(); return; }
-      document.getElementById("qTotal").textContent = q.total ?? "-";
-      document.getElementById("qSentence").textContent = q.sentence_score ?? "-";
-      document.getElementById("qRequired").textContent = q.required_score ?? "-";
-      document.getElementById("qDetails").textContent = "품질 세부: " + (q.details || []).join(" | ");
+
+    // ── Mode chip ─────────────────────────────────────────────────────────────
+
+    function setMode(mode) {
+      const m = String(mode || "대기");
+      $modeChip.textContent = m;
+      $modeChip.className = "mode-chip";
+      if      (m.toLowerCase() === "api") $modeChip.classList.add("api");
+      else if (m === "실행중")             $modeChip.classList.add("running");
+      else if (m === "실패")              $modeChip.classList.add("fail");
     }
-    function setAgentsFromServer(stages){
-      if(!Array.isArray(stages) || !stages.length){
-        resetPipeline();
+
+    // ── Quality bars ──────────────────────────────────────────────────────────
+
+    function setQBar(valueId, barId, value) {
+      const valEl = document.getElementById(valueId);
+      const barEl = document.getElementById(barId);
+      if (!valEl || !barEl) return;
+      if (value === null || value === undefined) {
+        valEl.textContent = "-";
+        barEl.style.width = "0%";
+        barEl.className = "q-bar";
         return;
       }
+      const pct = Math.min(100, Math.max(0, Number(value)));
+      valEl.textContent = value;
+      barEl.style.width = pct + "%";
+      barEl.className = "q-bar " + (pct >= 80 ? "good" : pct >= 50 ? "warn" : "bad");
+    }
+    function resetQuality() {
+      setQBar("qTotal",    "qBarTotal",    null);
+      setQBar("qSentence", "qBarSentence", null);
+      setQBar("qRequired", "qBarRequired", null);
+      document.getElementById("qDetails").textContent = "세부: -";
+    }
+    function setQuality(q) {
+      if (!q) { resetQuality(); return; }
+      setQBar("qTotal",    "qBarTotal",    q.total          ?? null);
+      setQBar("qSentence", "qBarSentence", q.sentence_score ?? null);
+      setQBar("qRequired", "qBarRequired", q.required_score ?? null);
+      document.getElementById("qDetails").textContent = "세부: " + (q.details || []).join(" | ");
+    }
+
+    // ── Pipeline stepper ──────────────────────────────────────────────────────
+
+    function renderPipeline() {
+      $pipeline.innerHTML = '<div class="stepper-connector"></div>';
+      state.agents.forEach((a, i) => {
+        const badge = a.cls === "ok" ? "b-ok" : a.cls === "run" ? "b-run" : a.cls === "bad" ? "b-bad" : "b-wait";
+        const icon  = a.cls === "ok" ? "✓" : a.cls === "bad" ? "✕" : a.cls === "run" ? '<span class="spin-icon">⟳</span>' : String(i + 1);
+        const el = document.createElement("div");
+        el.className = `step ${a.cls}`;
+        el.innerHTML = `<div class="step-dot">${icon}</div><div><div class="step-title">${a.title}</div><div class="step-id">${a.id}</div></div><span class="badge ${badge}">${a.status}</span>`;
+        $pipeline.appendChild(el);
+      });
+    }
+    function setAgentsFromServer(stages) {
+      if (!Array.isArray(stages) || !stages.length) { resetPipeline(); return; }
       state.agents = stages.map(s => ({
         id: s.id || "-",
         title: s.title || s.id || "-",
@@ -265,115 +653,164 @@
       }));
       renderPipeline();
     }
-    function renderPipeline(){
-      $pipeline.innerHTML="";
-      state.agents.forEach(a=>{
-        const badge = a.cls==="ok"?"b-ok":a.cls==="run"?"b-run":a.cls==="bad"?"b-bad":"b-wait";
-        const el=document.createElement("div");
-        el.className="agent";
-        el.innerHTML=`<span class="dot ${a.cls}"></span><div><div><b>${a.title}</b></div><div class="meta">${a.id}</div></div><span class="badge ${badge}">${a.status}</span>`;
-        $pipeline.appendChild(el);
-      });
+    function resetPipeline() {
+      state.agents = defaultStages.map(([id,title]) => ({id, title, status:"대기", cls:"wait"}));
+      renderPipeline();
     }
-    function resetPipeline(){ state.agents=defaultStages.map(([id,title])=>({id,title,status:"대기",cls:"wait"})); renderPipeline(); }
-    async function loadInput(){
-      try{
-        const res=await fetch("/api/input"); const data=await res.json();
-        if(!res.ok||!data.ok) throw new Error(data.error||"로드 실패");
-        setForm(data.values||{}); $preview.textContent=data.markdown||"";
-      }catch(e){ setStatus("bad",`입력 로드 실패: ${e.message}`); }
-    }
-    async function saveInput(){
-      const p=getPayload();
-      const required=["research_topic","research_method","study_start","study_end","target_type","target_count"];
-      const miss=required.filter(k=>!p[k]);
-      if(miss.length){ setStatus("bad","필수 입력(주제/방법/기간/대상)을 확인하세요."); return false; }
-      const res=await fetch("/api/input",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p)});
-      const data=await res.json();
-      if(!res.ok||!data.ok){ setStatus("bad",`저장 실패: ${data.error||"알 수 없는 오류"}`); return false; }
-      $preview.textContent=data.markdown||""; setStatus("good",`저장 완료: ${data.path}`); return true;
-    }
-    async function loadHistory(){
-      try{
-        const res=await fetch("/api/history"); const data=await res.json();
-        if(!res.ok||!data.ok) throw new Error(data.error||"이력 로드 실패");
-        $history.innerHTML="";
-        (data.items||[]).forEach(it=>{
-          const el=document.createElement("div");
-          el.className="history-item";
-          el.innerHTML=`<div><b>${it.ok?"성공":"실패"}</b> | ${it.timestamp || "-"}</div>
-                        <div>모드: ${it.mode || "-"}, 모델: ${it.model || "-"}</div>
-                        <div>주제: ${it.topic || "-"}</div>
-                        <div>품질: ${it.quality_total ?? "-"} / 문장수: ${it.quality_sentence ?? "-"} / 필수항목: ${it.quality_required ?? "-"}</div>
-                        <div class="meta">${it.error || ""}</div>`;
+
+    // ── History ───────────────────────────────────────────────────────────────
+
+    async function loadHistory() {
+      try {
+        const res  = await fetch("/api/history");
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || "이력 로드 실패");
+        $history.innerHTML = "";
+        (data.items || []).forEach(it => {
+          const ok = !!it.ok;
+          const el = document.createElement("div");
+          el.className = `history-item ${ok ? "ok" : "fail"}`;
+          el.innerHTML = `
+            <div class="hi-header">
+              <span class="hi-badge ${ok ? "b-ok" : "b-bad"}">${ok ? "성공" : "실패"}</span>
+              <span class="hi-time">${it.timestamp || "-"}</span>
+            </div>
+            <div class="hi-topic">${it.topic || "-"}</div>
+            <div class="hi-meta">모드: ${it.mode || "-"} · 모델: ${it.model || "-"}</div>
+            <div class="hi-quality">품질 ${it.quality_total ?? "-"} · 문장 ${it.quality_sentence ?? "-"} · 필수 ${it.quality_required ?? "-"}</div>
+            ${it.error ? `<div class="hi-error">${it.error}</div>` : ""}`;
           $history.appendChild(el);
         });
-        if(!(data.items||[]).length){ $history.textContent="실행 이력이 없습니다."; }
-      }catch(e){
-        $history.textContent=`이력 로드 실패: ${e.message}`;
+        if (!(data.items || []).length) $history.textContent = "실행 이력이 없습니다.";
+      } catch(e) {
+        $history.textContent = `이력 로드 실패: ${e.message}`;
       }
     }
-    async function runAgents(){
-      if(state.running) return;
-      state.running=true; setStatus("warn","실행 중..."); setMode("실행중"); resetPipeline(); resetQuality();
-      const values=getPayload();
-      const required=["research_topic","research_method","study_start","study_end","target_type","target_count"];
-      const miss=required.filter(k=>!values[k]);
-      if(miss.length){
-        setStatus("bad","필수 입력(주제/방법/기간/대상)을 확인하세요.");
-        state.running=false;
+
+    // ── Load / Save input ─────────────────────────────────────────────────────
+
+    async function loadInput() {
+      try {
+        const res  = await fetch("/api/input");
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || "로드 실패");
+        setForm(data.values || {});
+        $preview.textContent = data.markdown || "";
+      } catch(e) {
+        setStatus("bad", `입력 로드 실패: ${e.message}`);
+      }
+    }
+    async function saveInput() {
+      const p    = getPayload();
+      const miss = requiredIds.filter(k => !p[k]);
+      if (miss.length) {
+        markInvalidFields(p);
+        setStatus("bad", "필수 입력(주제/방법/기간/대상)을 확인하세요.");
+        return false;
+      }
+      const res  = await fetch("/api/input", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(p)});
+      const data = await res.json();
+      if (!res.ok || !data.ok) { setStatus("bad", `저장 실패: ${data.error || "알 수 없는 오류"}`); return false; }
+      $preview.textContent = data.markdown || "";
+      setStatus("good", `저장 완료: ${data.path}`);
+      return true;
+    }
+
+    // ── Fill example ──────────────────────────────────────────────────────────
+
+    function fillExample() {
+      setForm({
+        research_topic:  "바이브 코딩을 활용한 교육이 교사의 문제해결력에 미치는 영향",
+        research_method: "10차시 수업, 문제해결력 사전-사후 검사",
+        study_start:     "2026-01-01",
+        study_end:       "2026-06-30",
+        target_type:     "교사",
+        target_count:    "50",
+        study_design:    "양적",
+        consent_method:  "서면 동의",
+        data_tools:      "설문지",
+        risk_level:      "최소위험",
+        institution:     "경북대학교",
+        department:      "사범대학 정보컴퓨터교육과",
+        sensitive_data:  "아니오",
+        face_to_face:    "예",
+        pi_name:         "이동국",
+        pi_phone:        "053-950-5845",
+      });
+      setStatus("good", "예시 입력값을 채웠습니다.");
+    }
+    async function fillAndSaveRequestedTemplate() {
+      fillExample();
+      const ok = await saveInput();
+      if (ok) setStatus("good", "요청 양식을 채우고 input-form.md 파일로 저장했습니다.");
+    }
+
+    // ── Run agents ────────────────────────────────────────────────────────────
+
+    async function runAgents() {
+      if (state.running) return;
+      const values = getPayload();
+      const miss   = requiredIds.filter(k => !values[k]);
+      if (miss.length) {
+        markInvalidFields(values);
+        setStatus("bad", "필수 입력(주제/방법/기간/대상)을 확인하세요.");
         return;
       }
-      try{
+      setRunning(true);
+      setStatus("warn", "실행 중...");
+      setMode("실행중");
+      resetPipeline();
+      resetQuality();
+      try {
         const runPayload = {
           values,
           api_key: document.getElementById("api_key").value.trim(),
-          model: document.getElementById("api_model").value.trim()
+          model:   document.getElementById("api_model").value.trim()
         };
-        const res=await fetch("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(runPayload)});
-        const data=await res.json();
-        if(!(res.ok||res.status===202)||!data.ok||!data.run_id){
-          throw new Error(data.error||"실행 시작 실패");
+        const res  = await fetch("/api/run", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(runPayload)});
+        const data = await res.json();
+        if (!(res.ok || res.status === 202) || !data.ok || !data.run_id) {
+          throw new Error(data.error || "실행 시작 실패");
         }
-        if((data.warnings||[]).length){
-          setStatus("warn", data.warnings.join(" | "));
-        }
+        if ((data.warnings || []).length) setStatus("warn", data.warnings.join(" | "));
+
         const runId = data.run_id;
         let finalRun = null;
-        while(true){
-          const statusRes = await fetch(`/api/run-status?run_id=${encodeURIComponent(runId)}`);
+        while (true) {
+          const statusRes  = await fetch(`/api/run-status?run_id=${encodeURIComponent(runId)}`);
           const statusData = await statusRes.json();
-          if(!statusRes.ok || !statusData.ok){
-            throw new Error(statusData.error || "실행 상태 조회 실패");
-          }
+          if (!statusRes.ok || !statusData.ok) throw new Error(statusData.error || "실행 상태 조회 실패");
           finalRun = statusData.run || null;
-          if(finalRun){
+          if (finalRun) {
             setMode(finalRun.status === "running" ? "실행중" : "api");
             setAgentsFromServer(finalRun.stages || []);
-            if(finalRun.status === "succeeded" || finalRun.status === "failed"){
-              break;
-            }
+            if (finalRun.status === "succeeded" || finalRun.status === "failed") break;
           }
-          await new Promise(r=>setTimeout(r, 700));
+          await new Promise(r => setTimeout(r, 700));
         }
 
         const result = (finalRun && finalRun.result) ? finalRun.result : {};
-        if(finalRun.status !== "succeeded" || !result.ok){
-          throw new Error([result.error||"실행 실패", result.api_stderr||result.api_stdout||""].filter(Boolean).join(" | "));
+        if (finalRun.status !== "succeeded" || !result.ok) {
+          throw new Error([result.error || "실행 실패", result.api_stderr || result.api_stdout || ""].filter(Boolean).join(" | "));
         }
-        setMode(result.mode||"api");
+        setMode(result.mode || "api");
         setQuality(result.quality || null);
         $result.innerHTML = `결과 파일: <code>${result.outputs.hwpx}</code>, <code>${result.outputs.json}</code>, <code>${result.outputs.md}</code>`;
-        setStatus("good",`실행 완료 (${result.mode})`);
+        setStatus("good", `실행 완료 (${result.mode})`);
         await loadInput();
-      }catch(e){
-        state.agents.forEach(a=>{ if(a.cls==="run"||a.cls==="wait"){ a.cls="bad"; a.status="실패"; }});
-        renderPipeline(); setMode("실패"); setStatus("bad",`실행 실패: ${e.message}`); $result.textContent="결과 파일: 실행 실패";
-      }finally{
-        state.running=false;
+      } catch(e) {
+        state.agents.forEach(a => { if (a.cls === "run" || a.cls === "wait") { a.cls = "bad"; a.status = "실패"; }});
+        renderPipeline();
+        setMode("실패");
+        setStatus("bad", `실행 실패: ${e.message}`);
+        $result.textContent = "결과 파일: 실행 실패";
+      } finally {
+        setRunning(false);
         await loadHistory();
       }
     }
+
+    // ── Event listeners ───────────────────────────────────────────────────────
 
     document.getElementById("reloadBtn").addEventListener("click", loadInput);
     document.getElementById("saveBtn").addEventListener("click", saveInput);
@@ -382,6 +819,7 @@
     document.getElementById("exampleBtn").addEventListener("click", fillExample);
     document.getElementById("clearBtn").addEventListener("click", () => { clearForm(); setStatus("warn", "입력값을 초기화했습니다."); });
 
+    // ── Init ──────────────────────────────────────────────────────────────────
     resetPipeline(); setMode("대기"); resetQuality(); loadInput(); loadHistory();
   </script>
 </body>

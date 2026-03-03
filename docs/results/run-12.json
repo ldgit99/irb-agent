@@ -1,0 +1,28 @@
+{
+  "run_number": 12,
+  "run_id": "22610804934",
+  "run_url": "https://github.com/ldgit99/irb-agent/actions/runs/22610804934",
+  "timestamp": "2026-03-03T06:14:54+00:00",
+  "topic": "AI 에이전트를 활용한 협력적 수업설계가 초중등 교사의 교수 효능감에 미치는 영향",
+  "model": "gpt-4.1-mini",
+  "quality": {
+    "total": 78.6,
+    "sentence_score": 100.0,
+    "required_score": 57.1,
+    "details": [
+      "문장수 - 섹션2: 10, 섹션3: 42",
+      "섹션 11개 완전성: 충족",
+      "목적 섹션 10문장 이상: 충족",
+      "방법 섹션 30문장 이상: 충족",
+      "방법 섹션 1~5 순서 포함: 충족",
+      "방법 섹션 소요시간 언급: 미충족",
+      "방법 섹션 윤리 고려 언급: 미충족",
+      "방법 섹션 안전 절차 언급: 미충족"
+    ]
+  },
+  "files": {
+    "hwpx": "results/irb-12.hwpx",
+    "md": "results/irb-12.md",
+    "json": "results/irb-12.json"
+  }
+}
